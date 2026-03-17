@@ -1,578 +1,195 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kogemi | Stream One Piece</title>
-    <style>
-        /* === CSS VARIABLES & THEMING === */
-        :root {
-            --bg-color: #0b1021;
-            --surface: #1e2640;
-            --gold: #FFD700;
-            --red: #FF2400;
-            --ocean: #0077BE;
-            --text-main: #ffffff;
-            --text-muted: #a0a8c0;
-            --border-thick: 3px solid #000;
-            --comic-shadow: 4px 4px 0px rgba(0,0,0,0.8);
-            --comic-shadow-active: 1px 1px 0px rgba(0,0,0,0.8);
-        }
+<title>Kogemi Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#0b1220;
+color:white;
+}
 
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            /* Comic Dotted Background */
-            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 2px, transparent 2px);
-            background-size: 20px 20px;
-            overflow-x: hidden;
-            padding-bottom: 40px;
-        }
+/* HEADER */
+.header{
+padding:15px;
+background:#111827;
+font-weight:bold;
+text-align:center;
+}
 
-        /* === TYPOGRAPHY & UTILITIES === */
-        .comic-text {
-            font-family: 'Impact', 'Arial Black', sans-serif;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
+/* SEARCH */
+.search{
+width:100%;
+padding:12px;
+border:none;
+outline:none;
+background:#1f2937;
+color:white;
+border-radius:10px;
+}
 
-        .text-outline {
-            text-shadow: 
-                -2px -2px 0 #000,  
-                 2px -2px 0 #000,
-                -2px  2px 0 #000,
-                 2px  2px 0 #000,
-                 3px  3px 0 var(--red);
-        }
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:10px;
+padding:10px;
+}
 
-        /* === HEADER === */
-        header {
-            position: fixed;
-            top: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 500px;
-            background: var(--surface);
-            border: var(--border-thick);
-            border-radius: 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            box-shadow: 0 0 15px rgba(0, 119, 190, 0.3), var(--comic-shadow);
-            z-index: 100;
-        }
+.card{
+background:#1f2937;
+border-radius:10px;
+overflow:hidden;
+cursor:pointer;
+}
 
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+.card img{
+width:100%;
+height:200px;
+object-fit:cover;
+}
 
-        .logo-circle {
-            width: 35px;
-            height: 35px;
-            background: var(--gold);
-            color: #000;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 900;
-            font-size: 20px;
-            border: 2px solid #000;
-        }
+.card-title{
+padding:8px;
+font-size:14px;
+}
 
-        .logo-text {
-            font-size: 22px;
-            font-weight: 900;
-            color: var(--text-main);
-            letter-spacing: 1px;
-        }
+/* PLAYER */
+.player{
+display:none;
+padding:10px;
+}
 
-        .burger-btn {
-            background: none;
-            border: none;
-            color: var(--text-main);
-            font-size: 24px;
-            cursor: pointer;
-        }
+iframe{
+width:100%;
+aspect-ratio:16/9;
+border:none;
+border-radius:10px;
+}
 
-        /* === SIDEBAR MENU === */
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: -300px;
-            width: 260px;
-            height: 100vh;
-            background: var(--surface);
-            border-right: var(--border-thick);
-            z-index: 200;
-            transition: 0.3s ease;
-            padding: 80px 20px 20px;
-            box-shadow: 10px 0 20px rgba(0,0,0,0.5);
-        }
+.back{
+padding:10px;
+cursor:pointer;
+color:#9ca3af;
+}
 
-        .sidebar.active {
-            left: 0;
-        }
-
-        .sidebar a {
-            display: block;
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 18px;
-            font-weight: bold;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 12px;
-            border: 2px solid transparent;
-            transition: 0.2s;
-        }
-
-        .sidebar a:hover {
-            background: var(--gold);
-            color: #000;
-            border: 2px solid #000;
-            box-shadow: 3px 3px 0 #000;
-            transform: translateX(5px);
-        }
-
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 150;
-            display: none;
-            opacity: 0;
-            transition: 0.3s ease;
-        }
-
-        .overlay.active {
-            display: block;
-            opacity: 1;
-        }
-
-        /* === MAIN LAYOUT === */
-        main {
-            padding-top: 100px;
-            max-width: 600px;
-            margin: 0 auto;
-            padding-inline: 20px;
-        }
-
-        /* === HERO SECTION === */
-        .hero {
-            text-align: center;
-            margin-bottom: 30px;
-            position: relative;
-        }
-
-        .hero-quote {
-            font-size: 32px;
-            color: var(--gold);
-            margin-bottom: 20px;
-            line-height: 1.1;
-            position: relative;
-            z-index: 2;
-        }
-
-        .main-visual {
-            position: relative;
-            width: 220px;
-            height: 220px;
-            margin: 0 auto;
-            border-radius: 50%;
-            background: url('https://images.unsplash.com/photo-1613375924409-eb7750873117?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80') center/cover;
-            border: 4px solid #000;
-            box-shadow: 6px 6px 0 var(--ocean);
-            z-index: 1;
-        }
-
-        .main-visual::after {
-            content: '💥';
-            position: absolute;
-            font-size: 40px;
-            bottom: -10px;
-            right: -10px;
-            filter: drop-shadow(2px 2px 0 #000);
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .main-visual::before {
-            content: '🍖';
-            position: absolute;
-            font-size: 35px;
-            top: -5px;
-            left: -10px;
-            filter: drop-shadow(2px 2px 0 #000);
-            animation: float 3s ease-in-out infinite reverse;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(10deg); }
-        }
-
-        /* === BUTTONS === */
-        .btn-watch {
-            display: block;
-            width: 100%;
-            max-width: 300px;
-            margin: 25px auto;
-            padding: 16px;
-            background: linear-gradient(90deg, var(--red), #8e2de2);
-            color: #fff;
-            font-size: 22px;
-            border: var(--border-thick);
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: var(--comic-shadow);
-            transition: 0.1s ease;
-        }
-
-        .btn-watch:active {
-            transform: translate(3px, 3px);
-            box-shadow: var(--comic-shadow-active);
-        }
-
-        /* === VIDEO PLAYER === */
-        .player-wrapper {
-            display: none; /* Hidden initially */
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: #000;
-            border: var(--border-thick);
-            border-radius: 16px;
-            margin: 20px 0;
-            box-shadow: var(--comic-shadow);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .player-wrapper iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* === INFO SECTION === */
-        .info-section {
-            background: var(--surface);
-            padding: 20px;
-            border-radius: 16px;
-            border: var(--border-thick);
-            box-shadow: var(--comic-shadow);
-            margin-bottom: 30px;
-        }
-
-        .anime-title {
-            font-size: 28px;
-            color: var(--gold);
-            margin-bottom: 10px;
-        }
-
-        .metadata {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-bottom: 15px;
-            display: flex;
-            gap: 10px;
-            font-weight: bold;
-        }
-
-        .tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .tag {
-            background: rgba(0, 119, 190, 0.2);
-            color: #82cfff;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            border: 1px solid rgba(0, 119, 190, 0.5);
-        }
-
-        /* === ARC SELECTOR === */
-        .arc-selector {
-            display: flex;
-            gap: 12px;
-            overflow-x: auto;
-            padding: 10px 5px;
-            margin-bottom: 20px;
-            scrollbar-width: none; /* Firefox */
-        }
-
-        .arc-selector::-webkit-scrollbar {
-            display: none; /* Chrome */
-        }
-
-        .arc-btn {
-            flex-shrink: 0;
-            background: var(--surface);
-            color: var(--text-main);
-            border: 2px solid #000;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 2px 2px 0 #000;
-            transition: 0.2s ease;
-        }
-
-        .arc-btn.active {
-            background: var(--gold);
-            color: #000;
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2);
-            transform: translate(2px, 2px);
-        }
-
-        /* === EPISODE GRID === */
-        .episodes-container h3 {
-            margin-bottom: 15px;
-            color: var(--ocean);
-            font-size: 20px;
-        }
-
-        .episode-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-            gap: 12px;
-        }
-
-        .ep-card {
-            background: var(--surface);
-            border: 2px solid #000;
-            border-radius: 12px;
-            aspect-ratio: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 18px;
-            font-weight: 900;
-            cursor: pointer;
-            box-shadow: 3px 3px 0 #000;
-            transition: 0.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .ep-card:hover, .ep-card.playing {
-            background: var(--ocean);
-            color: #fff;
-            transform: translateY(-3px);
-            box-shadow: 3px 6px 0 #000;
-        }
-
-        .ep-card:active {
-            transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0 #000;
-        }
-        
-        .ep-card.playing {
-            background: var(--red);
-            border-color: #fff;
-        }
-
-    </style>
+</style>
 </head>
+
 <body>
 
-    <div class="overlay" id="overlay"></div>
-    <nav class="sidebar" id="sidebar">
-        <a href="#" style="color: var(--gold);">🏠 Home</a>
-        <a href="#">🔥 Popular</a>
-        <a href="#">📈 Trending</a>
-        <a href="#">📌 My List</a>
-    </nav>
+<div class="header">Kogemi</div>
 
-    <header>
-        <div class="logo-container">
-            <div class="logo-circle">K</div>
-            <div class="logo-text">Kogemi</div>
-        </div>
-        <button class="burger-btn" id="burger-btn">☰</button>
-    </header>
+<!-- HOME -->
+<div id="home">
 
-    <main>
-        <section class="hero">
-            <h1 class="hero-quote comic-text text-outline">I'm gonna be the King of the Pirates!</h1>
-            <div class="main-visual"></div>
-            
-            <button class="btn-watch comic-text" id="watch-btn">WATCH NOW</button>
-        </section>
+<div style="padding:10px">
+<input class="search" placeholder="Search anime..." oninput="searchAnime(this.value)">
+</div>
 
-        <section class="player-wrapper" id="player-wrapper">
-            <iframe id="video-frame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
-        </section>
+<div class="grid" id="results"></div>
 
-        <section class="info-section">
-            <h2 class="anime-title comic-text">ONE PIECE</h2>
-            <div class="metadata">
-                <span>⭐ 8.8</span>
-                <span>|</span>
-                <span>1999</span>
-                <span>|</span>
-                <span>24m/ep</span>
-            </div>
-            <div class="tags">
-                <span class="tag">Action</span>
-                <span class="tag">Adventure</span>
-                <span class="tag">Comedy</span>
-                <span class="tag">Fantasy</span>
-            </div>
-        </section>
+</div>
 
-        <section class="episodes-container">
-            <h3>SELECT ARC</h3>
-            <div class="arc-selector" id="arc-selector">
-                </div>
+<!-- WATCH -->
+<div id="watch" style="display:none">
 
-            <div class="episode-grid" id="episode-grid">
-                </div>
-        </section>
-    </main>
+<div class="back" onclick="goHome()">← Back</div>
 
-    <script>
-        // === DATA: ARCS ===
-        const arcs = [
-            { name: "East Blue", start: 1, end: 61 },
-            { name: "Alabasta", start: 62, end: 135 },
-            { name: "Skypiea", start: 136, end: 206 },
-            { name: "Water 7", start: 207, end: 325 },
-            { name: "Marineford", start: 326, end: 516 },
-            { name: "Dressrosa", start: 517, end: 746 },
-            { name: "Wano", start: 747, end: 1155 }
-        ];
+<div class="player" id="playerBox">
+<iframe id="player"></iframe>
+</div>
 
-        // === DOM ELEMENTS ===
-        const arcSelector = document.getElementById('arc-selector');
-        const episodeGrid = document.getElementById('episode-grid');
-        const playerWrapper = document.getElementById('player-wrapper');
-        const videoFrame = document.getElementById('video-frame');
-        const watchBtn = document.getElementById('watch-btn');
-        
-        // Sidebar elements
-        const burgerBtn = document.getElementById('burger-btn');
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
+</div>
 
-        // State
-        let currentEpisode = null;
+<script>
 
-        // === SIDEBAR LOGIC ===
-        function toggleSidebar() {
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
-        }
-        burgerBtn.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', toggleSidebar);
+/* 🔑 YOUR API KEY */
+const API_KEY = "fdc7143eae0ef3d73d0484e1fb87056c";
 
-        // === VIDEO PLAYER LOGIC ===
-        function playEpisode(epNum) {
-            // Update Iframe URL
-            const url = `https://vidfast.pro/tv/tt0388629/1/${epNum}?autoPlay=true`;
-            videoFrame.src = url;
-            
-            // Show player if hidden
-            playerWrapper.style.display = 'block';
-            
-            // Smooth scroll to player
-            playerWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Highlight active episode
-            currentEpisode = epNum;
-            highlightActiveEpisode();
-        }
+/* SEARCH */
+function searchAnime(q){
 
-        // Watch Now Button Loads Episode 1
-        watchBtn.addEventListener('click', () => {
-            // Check if it's already on Ep 1 and playing, otherwise load it
-            if(currentEpisode !== 1) {
-                // Defaulting to East Blue arc if clicking watch now
-                renderEpisodes(arcs[0]); 
-                const firstArcBtn = document.querySelector('.arc-btn');
-                document.querySelectorAll('.arc-btn').forEach(b => b.classList.remove('active'));
-                if(firstArcBtn) firstArcBtn.classList.add('active');
-                
-                playEpisode(1);
-            } else {
-                playerWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        });
+if(!q){
+document.getElementById("results").innerHTML="";
+return;
+}
 
-        // === UI RENDER LOGIC ===
-        function renderArcs() {
-            arcSelector.innerHTML = '';
-            arcs.forEach((arc, index) => {
-                const btn = document.createElement('button');
-                btn.className = `arc-btn ${index === 0 ? 'active' : ''}`;
-                btn.textContent = arc.name;
-                
-                btn.addEventListener('click', () => {
-                    // Handle active state styling
-                    document.querySelectorAll('.arc-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    
-                    // Render episodes for this arc
-                    renderEpisodes(arc);
-                });
-                
-                arcSelector.appendChild(btn);
-            });
-            
-            // Render first arc initially
-            renderEpisodes(arcs[0]);
-        }
+fetch(`https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=${q}`)
+.then(res=>res.json())
+.then(data=>{
+showResults(data.results);
+});
+}
 
-        function renderEpisodes(arc) {
-            episodeGrid.innerHTML = '';
-            for (let i = arc.start; i <= arc.end; i++) {
-                const card = document.createElement('div');
-                card.className = 'ep-card';
-                card.textContent = i;
-                card.dataset.ep = i;
-                
-                if (currentEpisode === i) {
-                    card.classList.add('playing');
-                }
-                
-                card.addEventListener('click', () => {
-                    playEpisode(i);
-                });
-                
-                episodeGrid.appendChild(card);
-            }
-        }
+/* SHOW RESULTS */
+function showResults(list){
+let container = document.getElementById("results");
+container.innerHTML="";
 
-        function highlightActiveEpisode() {
-            document.querySelectorAll('.ep-card').forEach(card => {
-                if (parseInt(card.dataset.ep) === currentEpisode) {
-                    card.classList.add('playing');
-                } else {
-                    card.classList.remove('playing');
-                }
-            });
-        }
+list.forEach(item=>{
 
-        // Initialize App
-        renderArcs();
-    </script>
+if(!item.poster_path) return;
+
+let card = document.createElement("div");
+card.className="card";
+
+card.innerHTML = `
+<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">
+<div class="card-title">${item.name}</div>
+`;
+
+card.onclick=()=>openAnime(item.id);
+
+container.appendChild(card);
+
+});
+}
+
+/* OPEN ANIME */
+function openAnime(tmdbId){
+
+fetch(`https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${API_KEY}&append_to_response=external_ids`)
+.then(res=>res.json())
+.then(data=>{
+
+let imdb = data.external_ids.imdb_id;
+
+if(!imdb){
+alert("No player available 😢");
+return;
+}
+
+startPlayer(imdb);
+
+});
+
+}
+
+/* START PLAYER */
+function startPlayer(imdb){
+
+document.getElementById("home").style.display="none";
+document.getElementById("watch").style.display="block";
+document.getElementById("playerBox").style.display="block";
+
+/* PLAY EPISODE 1 */
+document.getElementById("player").src =
+`https://vidfast.pro/tv/${imdb}/1/1?autoPlay=true&theme=7c3aed&nextButton=true&autoNext=true`;
+
+}
+
+/* BACK */
+function goHome(){
+document.getElementById("watch").style.display="none";
+document.getElementById("home").style.display="block";
+document.getElementById("player").src="";
+}
+
+</script>
+
 </body>
 </html>
