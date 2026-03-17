@@ -1,102 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Kogemi</title>
+<title>Kogemi V2</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
 <style>
-body{
-margin:0;
-font-family:Arial;
-background:#0b1220;
-color:white;
-}
-
-.header{
-padding:15px;
-text-align:center;
-background:#111827;
-font-size:18px;
-font-weight:bold;
-}
-
-.search{
-width:100%;
-padding:12px;
-border:none;
-background:#1f2937;
-color:white;
-border-radius:10px;
-}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:10px;
-padding:10px;
-}
-
-.card{
-background:#1f2937;
-border-radius:12px;
-overflow:hidden;
-cursor:pointer;
-}
-
-.card img{
-width:100%;
-height:200px;
-object-fit:cover;
-}
-
-.card-title{
-padding:8px;
-font-size:14px;
-}
-
-.watch{
-display:none;
-padding:10px;
-}
-
-iframe{
-width:100%;
-aspect-ratio:16/9;
-border:none;
-border-radius:12px;
-}
-
-.back{
-padding:10px;
-cursor:pointer;
-color:#9ca3af;
-}
-
-.episodes{
-display:grid;
-grid-template-columns:repeat(5,1fr);
-gap:6px;
-margin-top:10px;
-}
-
-.ep{
-background:#1f2937;
-padding:10px;
-border-radius:10px;
-text-align:center;
-cursor:pointer;
-}
-
-.ep:hover{
-background:#7c3aed;
-}
+body{margin:0;font-family:Arial;background:#0b1220;color:white;}
+.header{padding:15px;text-align:center;background:#111827;font-weight:bold;}
+.search{width:100%;padding:12px;border:none;background:#1f2937;color:white;border-radius:10px;}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px;}
+.card{background:#1f2937;border-radius:10px;overflow:hidden;cursor:pointer;}
+.card img{width:100%;height:200px;object-fit:cover;}
+.card-title{padding:8px;}
+.watch{display:none;padding:10px;}
+video{width:100%;border-radius:10px;}
+.back{padding:10px;cursor:pointer;}
+.episodes{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:10px;}
+.ep{background:#1f2937;padding:8px;text-align:center;border-radius:8px;cursor:pointer;}
 </style>
 </head>
 
 <body>
 
-<div class="header">Kogemi</div>
+<div class="header">Kogemi V2 🔥</div>
 
+<!-- HOME -->
 <div id="home">
 <div style="padding:10px">
 <input class="search" placeholder="Search anime..." oninput="searchAnime(this.value)">
@@ -104,192 +34,94 @@ background:#7c3aed;
 <div class="grid" id="results"></div>
 </div>
 
+<!-- WATCH -->
 <div id="watch" class="watch">
 <div class="back" onclick="goHome()">← Back</div>
-<iframe id="player"></iframe>
+<video id="player" controls></video>
 <div class="episodes" id="episodes"></div>
 </div>
 
 <script>
 
-/* 🔑 ADD YOUR KEY HERE */
-const OMDB_KEYS = ["YOUR_OMDB_KEY"];
+const API = "https://api.consumet.org";
 
-let keyIndex = 0;
-let cache = {};
+/* 🔍 SEARCH */
+async function searchAnime(q){
+if(!q) return;
 
-/* 🔁 KEY SYSTEM */
-function getKey(){
-return OMDB_KEYS[keyIndex];
+let res = await fetch(`${API}/anime/gogoanime/${q}`);
+let data = await res.json();
+
+showResults(data.results || []);
 }
 
-function nextKey(){
-keyIndex = (keyIndex + 1) % OMDB_KEYS.length;
-}
-
-/* 🔍 JIKAN SEARCH */
-function searchAnime(q){
-
-if(!q){
-document.getElementById("results").innerHTML="";
-return;
-}
-
-fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}`)
-.then(res=>res.json())
-.then(data=>showResults(data.data || []))
-.catch(console.log);
-
-}
-
-/* 🎴 SHOW RESULTS */
+/* 🎴 SHOW */
 function showResults(list){
-let container = document.getElementById("results");
-container.innerHTML="";
+let c = document.getElementById("results");
+c.innerHTML="";
 
-list.forEach(anime=>{
-
-if(!anime.images?.jpg?.image_url) return;
-
-let card = document.createElement("div");
+list.forEach(a=>{
+let card=document.createElement("div");
 card.className="card";
 
-card.innerHTML = `
-<img src="${anime.images.jpg.image_url}">
-<div class="card-title">${anime.title}</div>
+card.innerHTML=`
+<img src="${a.image}">
+<div class="card-title">${a.title}</div>
 `;
 
-card.onclick = ()=>openAnime(anime.title);
-
-container.appendChild(card);
-
+card.onclick=()=>openAnime(a.id);
+c.appendChild(card);
 });
 }
 
-/* 🧠 SMART MATCH FUNCTION */
-function findBestMatch(results, title){
-
-title = title.toLowerCase();
-
-return results.find(r =>
-r.Title.toLowerCase().includes(title)
-) || results[0];
-
-}
-
-/* 🎯 GET IMDB (FIXED) */
-async function getIMDB(title){
-
-if(cache[title]) return cache[title];
-
-for(let i=0;i<OMDB_KEYS.length;i++){
-
-try{
-
-let key = getKey();
-
-let res = await fetch(
-`https://www.omdbapi.com/?apikey=${key}&s=${encodeURIComponent(title)}&type=series`
-);
-
-let data = await res.json();
-
-if(data.Search && data.Search.length > 0){
-
-let best = findBestMatch(data.Search, title);
-
-let result = {
-imdbID: best.imdbID,
-Type: "series"
-};
-
-cache[title] = result;
-return result;
-
-}
-
-/* fallback to movie */
-let res2 = await fetch(
-`https://www.omdbapi.com/?apikey=${key}&s=${encodeURIComponent(title)}`
-);
-
-let data2 = await res2.json();
-
-if(data2.Search && data2.Search.length > 0){
-
-let best = findBestMatch(data2.Search, title);
-
-let result = {
-imdbID: best.imdbID,
-Type: best.Type
-};
-
-cache[title] = result;
-return result;
-
-}
-
-if(data.Error && data.Error.includes("limit")){
-nextKey();
-continue;
-}
-
-return null;
-
-}catch(e){
-nextKey();
-}
-
-}
-
-return null;
-}
-
-/* ▶ OPEN */
-async function openAnime(title){
-
-let data = await getIMDB(title);
-
-if(!data){
-alert("No stream available");
-return;
-}
+/* 📺 OPEN ANIME */
+async function openAnime(id){
 
 document.getElementById("home").style.display="none";
 document.getElementById("watch").style.display="block";
 
-if(data.Type === "series"){
-playEpisode(1, data.imdbID);
-loadEpisodes(data.imdbID, 50);
-}else{
-document.getElementById("episodes").innerHTML="";
-document.getElementById("player").src =
-`https://vidfast.pro/movie/${data.imdbID}?autoPlay=true&theme=7c3aed`;
+let res = await fetch(`${API}/anime/gogoanime/info/${id}`);
+let data = await res.json();
+
+loadEpisodes(data.episodes);
 }
 
+/* 📺 LOAD EPISODES */
+function loadEpisodes(list){
+let c=document.getElementById("episodes");
+c.innerHTML="";
+
+list.forEach(ep=>{
+let e=document.createElement("div");
+e.className="ep";
+e.innerText=ep.number;
+
+e.onclick=()=>playEpisode(ep.id);
+c.appendChild(e);
+});
 }
 
 /* ▶ PLAY */
-function playEpisode(ep, id){
-document.getElementById("player").src =
-`https://vidfast.pro/tv/${id}/1/${ep}?autoPlay=true&theme=7c3aed&nextButton=true&autoNext=true`;
+async function playEpisode(id){
+
+let res = await fetch(`${API}/anime/gogoanime/watch/${id}`);
+let data = await res.json();
+
+let stream = data.sources[0].url;
+
+const video = document.getElementById("player");
+
+if(Hls.isSupported()){
+const hls = new Hls();
+hls.loadSource(stream);
+hls.attachMedia(video);
+}else{
+video.src = stream;
 }
 
-/* 📺 EPISODES */
-function loadEpisodes(id, total){
-let container = document.getElementById("episodes");
-container.innerHTML="";
-
-for(let i=1;i<=total;i++){
-let ep = document.createElement("div");
-ep.className="ep";
-ep.innerText=i;
-ep.onclick=()=>playEpisode(i,id);
-container.appendChild(ep);
-}
 }
 
-/* 🔙 BACK */
+/* BACK */
 function goHome(){
 document.getElementById("watch").style.display="none";
 document.getElementById("home").style.display="block";
