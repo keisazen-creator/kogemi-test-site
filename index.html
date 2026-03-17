@@ -1,294 +1,408 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kogemi</title>
+<title>Kogemi - One Piece</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body {
-  margin:0;
-  font-family: system-ui;
-  background:#0b1220;
-  color:white;
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial, sans-serif;
+margin:0;
 }
 
 /* HEADER */
-.header {
-  display:flex;
-  justify-content:space-between;
-  padding:15px;
-  font-weight:bold;
-  background:rgba(255,255,255,0.05);
-  backdrop-filter:blur(10px);
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 20px;
+background:#111827;
+font-weight:bold;
 }
 
-.logo {
-  background:linear-gradient(135deg,#7B3FE4,#B06CFF);
-  -webkit-background-clip:text;
-  color:transparent;
-  font-size:20px;
+.logo{
+background:#7c3aed;
+padding:10px;
+border-radius:10px;
 }
 
-/* SEARCH */
-.search {
-  padding:10px;
-}
-.search input {
-  width:100%;
-  padding:12px;
-  border-radius:12px;
-  border:none;
-  background:rgba(255,255,255,0.1);
-  color:white;
+/* CONTAINER */
+.container{
+max-width:900px;
+margin:auto;
+padding:15px;
 }
 
-/* GRID */
-.grid {
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
-  gap:12px;
-  padding:10px;
+/* TITLE */
+.title{
+font-size:28px;
+font-weight:bold;
+margin-top:10px;
 }
-
-.card {
-  background:rgba(255,255,255,0.05);
-  border-radius:14px;
-  overflow:hidden;
-  transition:0.3s;
-}
-.card:hover { transform:scale(1.05); }
-
-.card img {
-  width:100%;
-  height:200px;
-  object-fit:cover;
-}
-.card p { padding:8px; font-size:13px; }
 
 /* PLAYER */
-.player {
-  display:none;
-  padding:10px;
+iframe{
+width:100%;
+height:220px;
+border:none;
+border-radius:12px;
+margin-top:15px;
 }
 
-.ratio {
-  position:relative;
-  padding-bottom:56.25%;
+/* BUTTONS */
+.actions{
+margin:15px 0;
+display:flex;
+gap:10px;
 }
 
-iframe {
-  position:absolute;
-  width:100%;
-  height:100%;
-  border:none;
-  border-radius:12px;
+.watch{
+background:#7c3aed;
+padding:12px 20px;
+border:none;
+border-radius:10px;
+color:white;
+cursor:pointer;
 }
 
-/* EPISODES */
-.episodes {
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  gap:8px;
-  margin-top:10px;
+.list{
+background:#1f2937;
+padding:12px 20px;
+border:none;
+border-radius:10px;
+color:white;
 }
 
-.ep {
-  padding:10px;
-  background:rgba(255,255,255,0.05);
-  border-radius:10px;
-  text-align:center;
-  cursor:pointer;
+/* EPISODE SECTION */
+.section-title{
+font-size:20px;
+margin:20px 0 10px;
 }
 
-.ep.active {
-  background:#7B3FE4;
+/* EPISODE GROUP */
+.episode-group{
+background:#111827;
+padding:10px;
+border-radius:10px;
+margin-bottom:15px;
 }
+
+.group-title{
+font-weight:bold;
+margin-bottom:10px;
+}
+
+/* EPISODE GRID */
+.episodes{
+display:grid;
+grid-template-columns:repeat(4, 1fr);
+gap:10px;
+}
+
+.ep{
+background:#1f2937;
+padding:10px;
+border-radius:8px;
+text-align:center;
+cursor:pointer;
+transition:0.2s;
+}
+
+.ep:hover{
+background:#7c3aed;
+}
+
 </style>
+
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
-  <div class="logo">Kogemi Pro</div>
+<div class="logo">K</div>
+<div>Kogemi</div>
 </div>
 
-<div class="search">
-  <input id="searchInput" placeholder="Search anime...">
+<div class="container">
+
+<div class="title">One Piece</div>
+
+<!-- PLAYER -->
+<iframe id="player"
+src="https://vidfast.pro/tv/tt0388629/1/1?autoPlay=true"
+allowfullscreen></iframe>
+
+<!-- ACTION BUTTONS -->
+<div class="actions">
+<button class="watch">Watch Now</button>
+<button class="list">Add to List</button>
 </div>
 
-<div id="grid" class="grid"></div>
+<!-- EPISODES -->
+<div class="section-title">Episodes</div>
 
-<div id="player" class="player">
-  <div class="ratio">
-    <iframe id="vidfast-player"></iframe>
-  </div>
-  <div id="episodes" class="episodes"></div>
+<!-- EAST BLUE ARC -->
+<div class="episode-group">
+<div class="group-title">East Blue Arc (1 - 61)</div>
+
+<div class="episodes" id="eastBlue"></div>
+</div>
+
 </div>
 
 <script>
-const JIKAN = "https://api.jikan.moe/v4";
-const TMDB_KEY = "fdc7143eae0ef3d73d0484e1fb87056c";
 
-let currentImdb = null;
+/* AUTO GENERATE EPISODES */
+function generateEpisodes(start, end, containerId){
+let container = document.getElementById(containerId);
 
-/* LOAD TRENDING */
-async function loadTrending() {
-  const res = await fetch(`${JIKAN}/top/anime`);
-  const data = await res.json();
-  renderGrid(data.data);
-}
+for(let i = start; i <= end; i++){
+let ep = document.createElement("div");
+ep.className = "ep";
+ep.innerText = i;
 
-/* GRID */
-function renderGrid(list) {
-  const grid = document.getElementById("grid");
-  grid.innerHTML = "";
-
-  list.forEach(anime => {
-    const card = document.createElement("div");
-    card.className = "card";
-
-    card.innerHTML = `
-      <img loading="lazy" src="${anime.images.jpg.image_url}">
-      <p>${anime.title}</p>
-    `;
-
-    card.onclick = () => openAnime(anime.title);
-    grid.appendChild(card);
-
-    // 🔥 PRELOAD IMDB (no delay later)
-    getImdbId(anime.title);
-  });
-}
-
-/* SEARCH */
-let timeout;
-searchInput.oninput = e => {
-  clearTimeout(timeout);
-  timeout = setTimeout(() => searchAnime(e.target.value), 400);
+ep.onclick = function(){
+document.getElementById("player").src =
+`https://vidfast.pro/tv/tt0388629/1/${i}?autoPlay=true`;
 };
 
-async function searchAnime(q) {
-  if (!q) return loadTrending();
-  const res = await fetch(`${JIKAN}/anime?q=${q}`);
-  const data = await res.json();
-  renderGrid(data.data);
+container.appendChild(ep);
+}
 }
 
-/* TMDB + CACHE */
-async function getImdbId(title) {
-  const key = "imdb_" + title;
-  let cached = localStorage.getItem(key);
-  if (cached) return cached;
+/* LOAD EAST BLUE */
+generateEpisodes(1, 61, "eastBlue");
 
-  try {
-    const search = await fetch(
-      `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(title)}`
-    );
-    const data = await search.json();
-    if (!data.results.length) return null;
+</script>
 
-    const id = data.results[0].id;
+</body>
+</html>
 
-    const ext = await fetch(
-      `https://api.themoviedb.org/3/tv/${id}/external_ids?api_key=${TMDB_KEY}`
-    );
-    const extData = await ext.json();
+<!DOCTYPE html>
+<html>
+<head>
+<title>Kogemi - One Piece</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    localStorage.setItem(key, extData.imdb_id);
-    return extData.imdb_id;
+<style>
 
-  } catch {
-    return null;
-  }
+body{
+background:#0f172a;
+color:white;
+font-family:Arial, sans-serif;
+margin:0;
 }
 
-/* OPEN ANIME */
-async function openAnime(title) {
-  document.getElementById("grid").style.display = "none";
-  document.getElementById("player").style.display = "block";
-
-  // skeleton loading
-  document.getElementById("vidfast-player").src = "";
-
-  const imdb = await getImdbId(title);
-
-  if (!imdb) {
-    alert("Streaming not available");
-    return;
-  }
-
-  currentImdb = imdb;
-
-  loadEpisode(1);
-  renderEpisodes(50);
+/* HEADER */
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 20px;
+background:#111827;
 }
 
-/* LOAD EP */
-function loadEpisode(ep) {
-  const url = `https://vidfast.pro/tv/${currentImdb}/1/${ep}?autoPlay=true&theme=7c3aed&nextButton=true&autoNext=true`;
-
-  document.getElementById("vidfast-player").src = url;
-
-  localStorage.setItem("last_ep", ep);
+.logo{
+background:#7c3aed;
+padding:10px;
+border-radius:10px;
+font-weight:bold;
 }
 
-/* EPISODES */
-function renderEpisodes(count) {
-  const container = document.getElementById("episodes");
-  container.innerHTML = "";
-
-  for (let i = 1; i <= count; i++) {
-    const el = document.createElement("div");
-    el.className = "ep";
-    el.innerText = i;
-
-    el.onclick = () => {
-      loadEpisode(i);
-      document.querySelectorAll(".ep").forEach(e=>e.classList.remove("active"));
-      el.classList.add("active");
-    };
-
-    container.appendChild(el);
-  }
+.menu-btn{
+font-size:22px;
+cursor:pointer;
 }
 
-/* WATCH PARTY CONTROLLER */
-class WatchPartyController {
-  constructor(iframe) {
-    this.iframe = iframe;
-    this.setup();
-  }
-
-  setup() {
-    window.addEventListener("message", e => {
-      if (!e.data) return;
-
-      if (e.data.type === "PLAYER_EVENT") {
-        console.log("Player Event:", e.data);
-      }
-    });
-  }
-
-  syncPlay(time) {
-    this.iframe.contentWindow.postMessage({ command:"play", time }, "*");
-  }
-
-  syncPause(time) {
-    this.iframe.contentWindow.postMessage({ command:"pause", time }, "*");
-  }
-
-  syncSeek(time) {
-    this.iframe.contentWindow.postMessage({ command:"seek", time }, "*");
-  }
+/* SIDEBAR */
+.sidebar{
+position:fixed;
+top:0;
+left:-250px;
+width:250px;
+height:100%;
+background:#111827;
+padding:20px;
+transition:0.3s;
+overflow:auto;
 }
 
-const party = new WatchPartyController(
-  document.getElementById("vidfast-player")
-);
+.sidebar.active{
+left:0;
+}
 
-/* INIT */
-loadTrending();
+.sidebar h3{
+margin-top:20px;
+}
+
+/* CONTENT */
+.container{
+max-width:900px;
+margin:auto;
+padding:15px;
+}
+
+/* PLAYER */
+iframe{
+width:100%;
+height:220px;
+border:none;
+border-radius:12px;
+margin-top:15px;
+}
+
+/* SECTION */
+.section-title{
+font-size:20px;
+margin:20px 0 10px;
+}
+
+/* EPISODE GRID */
+.episodes{
+display:grid;
+grid-template-columns:repeat(5, 1fr);
+gap:8px;
+}
+
+.ep{
+background:#1f2937;
+padding:10px;
+border-radius:8px;
+text-align:center;
+cursor:pointer;
+font-size:14px;
+}
+
+.ep:hover{
+background:#7c3aed;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+<div class="logo">K</div>
+<div>Kogemi</div>
+<div class="menu-btn" onclick="toggleMenu()">☰</div>
+</div>
+
+<!-- SIDEBAR (BURGER MENU) -->
+<div class="sidebar" id="sidebar">
+
+<h3>Arcs</h3>
+
+<div onclick="scrollToArc('east')">East Blue</div>
+<div onclick="scrollToArc('alabasta')">Alabasta</div>
+<div onclick="scrollToArc('skypiea')">Skypiea</div>
+<div onclick="scrollToArc('water7')">Water 7</div>
+<div onclick="scrollToArc('marineford')">Marineford</div>
+<div onclick="scrollToArc('dressrosa')">Dressrosa</div>
+<div onclick="scrollToArc('wano')">Wano</div>
+
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+<h2>One Piece</h2>
+
+<!-- PLAYER -->
+<iframe id="player"
+src="https://vidfast.pro/tv/tt0388629/1/1?autoPlay=true"
+allowfullscreen></iframe>
+
+<div class="section-title">Episodes</div>
+
+<!-- ARC SECTIONS -->
+
+<div id="east">
+<h3>East Blue (1–61)</h3>
+<div class="episodes" id="eastList"></div>
+</div>
+
+<div id="alabasta">
+<h3>Alabasta (62–135)</h3>
+<div class="episodes" id="alabastaList"></div>
+</div>
+
+<div id="skypiea">
+<h3>Skypiea (136–206)</h3>
+<div class="episodes" id="skypieaList"></div>
+</div>
+
+<div id="water7">
+<h3>Water 7 (207–325)</h3>
+<div class="episodes" id="water7List"></div>
+</div>
+
+<div id="marineford">
+<h3>Marineford (326–516)</h3>
+<div class="episodes" id="marinefordList"></div>
+</div>
+
+<div id="dressrosa">
+<h3>Dressrosa (517–746)</h3>
+<div class="episodes" id="dressrosaList"></div>
+</div>
+
+<div id="wano">
+<h3>Wano (747–1155)</h3>
+<div class="episodes" id="wanoList"></div>
+</div>
+
+</div>
+
+<script>
+
+/* PLAYER */
+function playEpisode(num){
+document.getElementById("player").src =
+`https://vidfast.pro/tv/tt0388629/1/${num}?autoPlay=true`;
+}
+
+/* GENERATE EPISODES */
+function generate(start, end, id){
+let container = document.getElementById(id);
+
+for(let i=start;i<=end;i++){
+let ep = document.createElement("div");
+ep.className = "ep";
+ep.innerText = i;
+
+ep.onclick = () => playEpisode(i);
+
+container.appendChild(ep);
+}
+}
+
+/* GENERATE ALL */
+generate(1,61,"eastList");
+generate(62,135,"alabastaList");
+generate(136,206,"skypieaList");
+generate(207,325,"water7List");
+generate(326,516,"marinefordList");
+generate(517,746,"dressrosaList");
+generate(747,1155,"wanoList");
+
+/* BURGER MENU */
+function toggleMenu(){
+document.getElementById("sidebar").classList.toggle("active");
+}
+
+/* SCROLL TO ARC */
+function scrollToArc(id){
+document.getElementById(id).scrollIntoView({behavior:"smooth"});
+toggleMenu();
+}
+
 </script>
 
 </body>
