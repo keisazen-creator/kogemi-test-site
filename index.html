@@ -1,43 +1,118 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>One Piece</title> 
+<title>Kogemi - One Piece</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
 body{
-background:#111827;
+background:#0f172a;
 color:white;
-font-family:Arial;
-text-align:center;
+font-family:Arial, sans-serif;
+margin:0;
 }
 
-.container{
-max-width:900px;
-margin:auto;
-padding:20px;
+/* HEADER */
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 20px;
+background:#111827;
+font-weight:bold;
 }
 
-iframe{
-width:100%;
-height:500px;
-border:none;
+.logo{
+background:#7c3aed;
+padding:10px;
 border-radius:10px;
 }
 
-button{
-padding:10px 20px;
-margin:5px;
-background:#ef4444;
-color:white;
+/* CONTAINER */
+.container{
+max-width:900px;
+margin:auto;
+padding:15px;
+}
+
+/* TITLE */
+.title{
+font-size:28px;
+font-weight:bold;
+margin-top:10px;
+}
+
+/* PLAYER */
+iframe{
+width:100%;
+height:220px;
 border:none;
-border-radius:6px;
+border-radius:12px;
+margin-top:15px;
+}
+
+/* BUTTONS */
+.actions{
+margin:15px 0;
+display:flex;
+gap:10px;
+}
+
+.watch{
+background:#7c3aed;
+padding:12px 20px;
+border:none;
+border-radius:10px;
+color:white;
 cursor:pointer;
 }
 
-button:hover{
-background:#dc2626;
+.list{
+background:#1f2937;
+padding:12px 20px;
+border:none;
+border-radius:10px;
+color:white;
+}
+
+/* EPISODE SECTION */
+.section-title{
+font-size:20px;
+margin:20px 0 10px;
+}
+
+/* EPISODE GROUP */
+.episode-group{
+background:#111827;
+padding:10px;
+border-radius:10px;
+margin-bottom:15px;
+}
+
+.group-title{
+font-weight:bold;
+margin-bottom:10px;
+}
+
+/* EPISODE GRID */
+.episodes{
+display:grid;
+grid-template-columns:repeat(4, 1fr);
+gap:10px;
+}
+
+.ep{
+background:#1f2937;
+padding:10px;
+border-radius:8px;
+text-align:center;
+cursor:pointer;
+transition:0.2s;
+}
+
+.ep:hover{
+background:#7c3aed;
 }
 
 </style>
@@ -46,29 +121,61 @@ background:#dc2626;
 
 <body>
 
+<!-- HEADER -->
+<div class="header">
+<div class="logo">K</div>
+<div>Kogemi</div>
+</div>
+
 <div class="container">
 
-<h1>One Piece</h1>
-<h3>Episode</h3>
+<div class="title">One Piece</div>
 
+<!-- PLAYER -->
 <iframe id="player"
 src="https://vidfast.pro/tv/tt0388629/1/1?autoPlay=true"
-allowfullscreen>
-</iframe>
+allowfullscreen></iframe>
 
-<br><br>
+<!-- ACTION BUTTONS -->
+<div class="actions">
+<button class="watch">Watch Now</button>
+<button class="list">Add to List</button>
+</div>
 
-<button onclick="playEpisode('https://vidfast.pro/tv/tt0388629/1/1?autoPlay=true')">
-Episode 
-</button>
+<!-- EPISODES -->
+<div class="section-title">Episodes</div>
+
+<!-- EAST BLUE ARC -->
+<div class="episode-group">
+<div class="group-title">East Blue Arc (1 - 61)</div>
+
+<div class="episodes" id="eastBlue"></div>
+</div>
 
 </div>
 
 <script>
 
-function playEpisode(link){
-document.getElementById("player").src = link;
+/* AUTO GENERATE EPISODES */
+function generateEpisodes(start, end, containerId){
+let container = document.getElementById(containerId);
+
+for(let i = start; i <= end; i++){
+let ep = document.createElement("div");
+ep.className = "ep";
+ep.innerText = i;
+
+ep.onclick = function(){
+document.getElementById("player").src =
+`https://vidfast.pro/tv/tt0388629/1/${i}?autoPlay=true`;
+};
+
+container.appendChild(ep);
 }
+}
+
+/* LOAD EAST BLUE */
+generateEpisodes(1, 61, "eastBlue");
 
 </script>
 
