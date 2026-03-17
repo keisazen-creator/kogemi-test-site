@@ -3,49 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kogemi Pro</title>
+<title>Kogemi</title>
 
 <style>
-:root {
-  --bg: #0b1220;
-  --card: rgba(255,255,255,0.05);
-  --primary: linear-gradient(135deg,#7B3FE4,#B06CFF);
-}
-
 body {
   margin:0;
   font-family: system-ui;
-  background: var(--bg);
+  background:#0b1220;
   color:white;
 }
 
 /* HEADER */
 .header {
-  padding:15px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
+  padding:15px;
+  font-weight:bold;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(10px);
 }
 
 .logo {
-  font-size:20px;
-  font-weight:bold;
-  background: var(--primary);
+  background:linear-gradient(135deg,#7B3FE4,#B06CFF);
   -webkit-background-clip:text;
   color:transparent;
+  font-size:20px;
 }
 
 /* SEARCH */
 .search {
   padding:10px;
 }
-
 .search input {
   width:100%;
   padding:12px;
   border-radius:12px;
   border:none;
-  outline:none;
   background:rgba(255,255,255,0.1);
   color:white;
 }
@@ -53,54 +46,25 @@ body {
 /* GRID */
 .grid {
   display:grid;
-  grid-template-columns: repeat(auto-fill,minmax(140px,1fr));
+  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
   gap:12px;
   padding:10px;
 }
 
 .card {
-  background: var(--card);
+  background:rgba(255,255,255,0.05);
   border-radius:14px;
   overflow:hidden;
-  cursor:pointer;
-  backdrop-filter: blur(10px);
   transition:0.3s;
 }
-
-.card:hover {
-  transform:scale(1.05);
-}
+.card:hover { transform:scale(1.05); }
 
 .card img {
   width:100%;
   height:200px;
   object-fit:cover;
 }
-
-.card p {
-  padding:8px;
-  font-size:13px;
-}
-
-/* DETAIL */
-.detail {
-  display:none;
-  padding:15px;
-}
-
-.detail img {
-  width:100%;
-  border-radius:14px;
-}
-
-.btn {
-  background: var(--primary);
-  padding:12px;
-  border-radius:12px;
-  margin-top:10px;
-  text-align:center;
-  cursor:pointer;
-}
+.card p { padding:8px; font-size:13px; }
 
 /* PLAYER */
 .player {
@@ -108,9 +72,15 @@ body {
   padding:10px;
 }
 
+.ratio {
+  position:relative;
+  padding-bottom:56.25%;
+}
+
 iframe {
+  position:absolute;
   width:100%;
-  height:220px;
+  height:100%;
   border:none;
   border-radius:12px;
 }
@@ -118,14 +88,14 @@ iframe {
 /* EPISODES */
 .episodes {
   display:grid;
-  grid-template-columns: repeat(5,1fr);
+  grid-template-columns:repeat(6,1fr);
   gap:8px;
   margin-top:10px;
 }
 
 .ep {
   padding:10px;
-  background: var(--card);
+  background:rgba(255,255,255,0.05);
   border-radius:10px;
   text-align:center;
   cursor:pointer;
@@ -149,16 +119,18 @@ iframe {
 
 <div id="grid" class="grid"></div>
 
-<div id="detail" class="detail"></div>
-
-<div id="player" class="player"></div>
+<div id="player" class="player">
+  <div class="ratio">
+    <iframe id="vidfast-player"></iframe>
+  </div>
+  <div id="episodes" class="episodes"></div>
+</div>
 
 <script>
 const JIKAN = "https://api.jikan.moe/v4";
 const TMDB_KEY = "fdc7143eae0ef3d73d0484e1fb87056c";
 
-let currentAnime = null;
-let imdbId = null;
+let currentImdb = null;
 
 /* LOAD TRENDING */
 async function loadTrending() {
@@ -167,31 +139,34 @@ async function loadTrending() {
   renderGrid(data.data);
 }
 
-/* RENDER GRID */
+/* GRID */
 function renderGrid(list) {
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
-  list.forEach(a => {
+  list.forEach(anime => {
     const card = document.createElement("div");
     card.className = "card";
 
     card.innerHTML = `
-      <img src="${a.images.jpg.image_url}">
-      <p>${a.title}</p>
+      <img loading="lazy" src="${anime.images.jpg.image_url}">
+      <p>${anime.title}</p>
     `;
 
-    card.onclick = () => openDetail(a);
+    card.onclick = () => openAnime(anime.title);
     grid.appendChild(card);
+
+    // 🔥 PRELOAD IMDB (no delay later)
+    getImdbId(anime.title);
   });
 }
 
-/* SEARCH (debounced) */
+/* SEARCH */
 let timeout;
-document.getElementById("searchInput").addEventListener("input", e => {
+searchInput.oninput = e => {
   clearTimeout(timeout);
   timeout = setTimeout(() => searchAnime(e.target.value), 400);
-});
+};
 
 async function searchAnime(q) {
   if (!q) return loadTrending();
@@ -200,94 +175,117 @@ async function searchAnime(q) {
   renderGrid(data.data);
 }
 
-/* DETAIL PAGE */
-async function openDetail(anime) {
-  currentAnime = anime;
-
-  document.getElementById("grid").style.display = "none";
-  const d = document.getElementById("detail");
-  d.style.display = "block";
-
-  d.innerHTML = `
-    <img src="${anime.images.jpg.large_image_url}">
-    <h2>${anime.title}</h2>
-    <p>⭐ ${anime.score || "N/A"}</p>
-    <p>${anime.synopsis || ""}</p>
-    <div class="btn" onclick="startWatching()">▶ Watch Now</div>
-  `;
-}
-
-/* TMDB → IMDB */
+/* TMDB + CACHE */
 async function getImdbId(title) {
+  const key = "imdb_" + title;
+  let cached = localStorage.getItem(key);
+  if (cached) return cached;
+
   try {
     const search = await fetch(
       `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(title)}`
     );
-    const sData = await search.json();
+    const data = await search.json();
+    if (!data.results.length) return null;
 
-    if (!sData.results.length) return null;
-
-    const id = sData.results[0].id;
+    const id = data.results[0].id;
 
     const ext = await fetch(
       `https://api.themoviedb.org/3/tv/${id}/external_ids?api_key=${TMDB_KEY}`
     );
-    const eData = await ext.json();
+    const extData = await ext.json();
 
-    return eData.imdb_id;
+    localStorage.setItem(key, extData.imdb_id);
+    return extData.imdb_id;
+
   } catch {
     return null;
   }
 }
 
-/* WATCH */
-async function startWatching() {
-  imdbId = await getImdbId(currentAnime.title);
+/* OPEN ANIME */
+async function openAnime(title) {
+  document.getElementById("grid").style.display = "none";
+  document.getElementById("player").style.display = "block";
 
-  if (!imdbId) {
+  // skeleton loading
+  document.getElementById("vidfast-player").src = "";
+
+  const imdb = await getImdbId(title);
+
+  if (!imdb) {
     alert("Streaming not available");
     return;
   }
 
-  document.getElementById("detail").style.display = "none";
-
-  const player = document.getElementById("player");
-  player.style.display = "block";
+  currentImdb = imdb;
 
   loadEpisode(1);
-  renderEpisodes(100);
+  renderEpisodes(50);
 }
 
-/* LOAD EPISODE */
+/* LOAD EP */
 function loadEpisode(ep) {
-  localStorage.setItem("lastEp", ep);
+  const url = `https://vidfast.pro/tv/${currentImdb}/1/${ep}?autoPlay=true&theme=7c3aed&nextButton=true&autoNext=true`;
 
-  const url = `https://vidfast.pro/tv/${imdbId}/1/${ep}?autoPlay=true&theme=7c3aed&nextButton=true&autoNext=true`;
+  document.getElementById("vidfast-player").src = url;
 
-  document.getElementById("player").innerHTML = `
-    <iframe src="${url}" allowfullscreen></iframe>
-    <div class="episodes" id="eps"></div>
-  `;
+  localStorage.setItem("last_ep", ep);
 }
 
 /* EPISODES */
 function renderEpisodes(count) {
-  const eps = document.getElementById("eps");
+  const container = document.getElementById("episodes");
+  container.innerHTML = "";
 
   for (let i = 1; i <= count; i++) {
-    const btn = document.createElement("div");
-    btn.className = "ep";
-    btn.innerText = i;
+    const el = document.createElement("div");
+    el.className = "ep";
+    el.innerText = i;
 
-    btn.onclick = () => {
+    el.onclick = () => {
       loadEpisode(i);
-      document.querySelectorAll(".ep").forEach(e => e.classList.remove("active"));
-      btn.classList.add("active");
+      document.querySelectorAll(".ep").forEach(e=>e.classList.remove("active"));
+      el.classList.add("active");
     };
 
-    eps.appendChild(btn);
+    container.appendChild(el);
   }
 }
+
+/* WATCH PARTY CONTROLLER */
+class WatchPartyController {
+  constructor(iframe) {
+    this.iframe = iframe;
+    this.setup();
+  }
+
+  setup() {
+    window.addEventListener("message", e => {
+      if (!e.data) return;
+
+      if (e.data.type === "PLAYER_EVENT") {
+        console.log("Player Event:", e.data);
+      }
+    });
+  }
+
+  syncPlay(time) {
+    this.iframe.contentWindow.postMessage({ command:"play", time }, "*");
+  }
+
+  syncPause(time) {
+    this.iframe.contentWindow.postMessage({ command:"pause", time }, "*");
+  }
+
+  syncSeek(time) {
+    this.iframe.contentWindow.postMessage({ command:"seek", time }, "*");
+  }
+}
+
+const party = new WatchPartyController(
+  document.getElementById("vidfast-player")
+);
 
 /* INIT */
 loadTrending();
