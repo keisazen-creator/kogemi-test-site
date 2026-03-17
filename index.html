@@ -7,108 +7,125 @@
 <style>
 
 body{
-background:#0f172a;
-color:white;
-font-family:Arial, sans-serif;
 margin:0;
+font-family:Arial;
+background:#0b1220;
+color:white;
 }
 
 /* HEADER */
 .header{
 display:flex;
 justify-content:space-between;
-align-items:center;
-padding:15px 20px;
-background:#111827;
-font-weight:bold;
+padding:15px;
+background:#0b1220;
 }
 
 .logo{
 background:#7c3aed;
 padding:10px;
-border-radius:10px;
+border-radius:12px;
 }
 
-/* CONTAINER */
-.container{
-max-width:900px;
-margin:auto;
-padding:15px;
+/* HERO */
+.hero{
+position:relative;
+height:250px;
+background:url('https://wallpaperaccess.com/full/1119442.jpg') center/cover;
 }
 
-/* TITLE */
-.title{
-font-size:28px;
-font-weight:bold;
-margin-top:10px;
-}
-
-/* PLAYER */
-iframe{
+.overlay{
+position:absolute;
 width:100%;
-height:220px;
+height:100%;
+background:linear-gradient(to bottom, transparent, #0b1220);
+}
+
+/* POSTER */
+.poster{
+margin-top:-80px;
+padding:15px;
+display:flex;
+gap:15px;
+align-items:flex-end;
+}
+
+.poster img{
+width:120px;
+border-radius:15px;
+}
+
+.title{
+font-size:26px;
+font-weight:bold;
+}
+
+.info{
+font-size:14px;
+color:#9ca3af;
+margin-top:5px;
+}
+
+/* BUTTON */
+.watch{
+margin:15px;
+background:#7c3aed;
+padding:12px;
 border:none;
 border-radius:12px;
-margin-top:15px;
-}
-
-/* BUTTONS */
-.actions{
-margin:15px 0;
-display:flex;
-gap:10px;
-}
-
-.watch{
-background:#7c3aed;
-padding:12px 20px;
-border:none;
-border-radius:10px;
 color:white;
+width:calc(100% - 30px);
+font-size:16px;
 cursor:pointer;
 }
 
-.list{
-background:#1f2937;
-padding:12px 20px;
+/* PLAYER */
+.player{
+display:none;
+padding:15px;
+}
+
+iframe{
+width:100%;
+height:220px;
+border-radius:12px;
 border:none;
-border-radius:10px;
-color:white;
 }
 
-/* EPISODE SECTION */
-.section-title{
-font-size:20px;
-margin:20px 0 10px;
-}
-
-/* EPISODE GROUP */
-.episode-group{
-background:#111827;
+/* ARC BUTTONS */
+.arcs{
+display:flex;
+overflow-x:auto;
+gap:10px;
 padding:10px;
-border-radius:10px;
-margin-bottom:15px;
 }
 
-.group-title{
-font-weight:bold;
-margin-bottom:10px;
+.arc{
+background:#1f2937;
+padding:10px 15px;
+border-radius:20px;
+white-space:nowrap;
+cursor:pointer;
 }
 
-/* EPISODE GRID */
+.arc.active{
+background:#7c3aed;
+}
+
+/* EPISODES */
 .episodes{
 display:grid;
-grid-template-columns:repeat(4, 1fr);
+grid-template-columns:repeat(5,1fr);
 gap:10px;
+padding:15px;
 }
 
 .ep{
 background:#1f2937;
 padding:10px;
-border-radius:8px;
+border-radius:10px;
 text-align:center;
 cursor:pointer;
-transition:0.2s;
 }
 
 .ep:hover{
@@ -125,282 +142,99 @@ background:#7c3aed;
 <div class="header">
 <div class="logo">K</div>
 <div>Kogemi</div>
+<div>☰</div>
 </div>
 
-<div class="container">
+<!-- HERO -->
+<div class="hero">
+<div class="overlay"></div>
+</div>
 
-<div class="title">One Piece</div>
+<!-- POSTER + INFO -->
+<div class="poster">
+<img src="https://m.media-amazon.com/images/I/81f8b3M7bPL.jpg">
+<div>
+<div class="title">ONE PIECE</div>
+<div class="info">⭐ 8.8 • 1999 • 24m/ep</div>
+</div>
+</div>
+
+<!-- WATCH BUTTON -->
+<button class="watch" onclick="showPlayer()">▶ Watch Now</button>
 
 <!-- PLAYER -->
+<div class="player" id="playerBox">
 <iframe id="player"
-src="https://vidfast.pro/tv/tt0388629/1/1?autoPlay=true"
-allowfullscreen></iframe>
-
-<!-- ACTION BUTTONS -->
-<div class="actions">
-<button class="watch">Watch Now</button>
-<button class="list">Add to List</button>
+src=""></iframe>
 </div>
+
+<!-- ARC SELECT -->
+<div class="arcs" id="arcList"></div>
 
 <!-- EPISODES -->
-<div class="section-title">Episodes</div>
-
-<!-- EAST BLUE ARC -->
-<div class="episode-group">
-<div class="group-title">East Blue Arc (1 - 61)</div>
-
-<div class="episodes" id="eastBlue"></div>
-</div>
-
-</div>
+<div class="episodes" id="episodes"></div>
 
 <script>
 
-/* AUTO GENERATE EPISODES */
-function generateEpisodes(start, end, containerId){
-let container = document.getElementById(containerId);
-
-for(let i = start; i <= end; i++){
-let ep = document.createElement("div");
-ep.className = "ep";
-ep.innerText = i;
-
-ep.onclick = function(){
-document.getElementById("player").src =
-`https://vidfast.pro/tv/tt0388629/1/${i}?autoPlay=true`;
-};
-
-container.appendChild(ep);
-}
+/* SHOW PLAYER */
+function showPlayer(){
+document.getElementById("playerBox").style.display="block";
+playEpisode(1);
 }
 
-/* LOAD EAST BLUE */
-generateEpisodes(1, 61, "eastBlue");
-
-</script>
-
-</body>
-</html>
-
-<!DOCTYPE html>
-<html>
-<head>
-<title>Kogemi - One Piece</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-
-body{
-background:#0f172a;
-color:white;
-font-family:Arial, sans-serif;
-margin:0;
-}
-
-/* HEADER */
-.header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:15px 20px;
-background:#111827;
-}
-
-.logo{
-background:#7c3aed;
-padding:10px;
-border-radius:10px;
-font-weight:bold;
-}
-
-.menu-btn{
-font-size:22px;
-cursor:pointer;
-}
-
-/* SIDEBAR */
-.sidebar{
-position:fixed;
-top:0;
-left:-250px;
-width:250px;
-height:100%;
-background:#111827;
-padding:20px;
-transition:0.3s;
-overflow:auto;
-}
-
-.sidebar.active{
-left:0;
-}
-
-.sidebar h3{
-margin-top:20px;
-}
-
-/* CONTENT */
-.container{
-max-width:900px;
-margin:auto;
-padding:15px;
-}
-
-/* PLAYER */
-iframe{
-width:100%;
-height:220px;
-border:none;
-border-radius:12px;
-margin-top:15px;
-}
-
-/* SECTION */
-.section-title{
-font-size:20px;
-margin:20px 0 10px;
-}
-
-/* EPISODE GRID */
-.episodes{
-display:grid;
-grid-template-columns:repeat(5, 1fr);
-gap:8px;
-}
-
-.ep{
-background:#1f2937;
-padding:10px;
-border-radius:8px;
-text-align:center;
-cursor:pointer;
-font-size:14px;
-}
-
-.ep:hover{
-background:#7c3aed;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<!-- HEADER -->
-<div class="header">
-<div class="logo">K</div>
-<div>Kogemi</div>
-<div class="menu-btn" onclick="toggleMenu()">☰</div>
-</div>
-
-<!-- SIDEBAR (BURGER MENU) -->
-<div class="sidebar" id="sidebar">
-
-<h3>Arcs</h3>
-
-<div onclick="scrollToArc('east')">East Blue</div>
-<div onclick="scrollToArc('alabasta')">Alabasta</div>
-<div onclick="scrollToArc('skypiea')">Skypiea</div>
-<div onclick="scrollToArc('water7')">Water 7</div>
-<div onclick="scrollToArc('marineford')">Marineford</div>
-<div onclick="scrollToArc('dressrosa')">Dressrosa</div>
-<div onclick="scrollToArc('wano')">Wano</div>
-
-</div>
-
-<!-- MAIN -->
-<div class="container">
-
-<h2>One Piece</h2>
-
-<!-- PLAYER -->
-<iframe id="player"
-src="https://vidfast.pro/tv/tt0388629/1/1?autoPlay=true"
-allowfullscreen></iframe>
-
-<div class="section-title">Episodes</div>
-
-<!-- ARC SECTIONS -->
-
-<div id="east">
-<h3>East Blue (1–61)</h3>
-<div class="episodes" id="eastList"></div>
-</div>
-
-<div id="alabasta">
-<h3>Alabasta (62–135)</h3>
-<div class="episodes" id="alabastaList"></div>
-</div>
-
-<div id="skypiea">
-<h3>Skypiea (136–206)</h3>
-<div class="episodes" id="skypieaList"></div>
-</div>
-
-<div id="water7">
-<h3>Water 7 (207–325)</h3>
-<div class="episodes" id="water7List"></div>
-</div>
-
-<div id="marineford">
-<h3>Marineford (326–516)</h3>
-<div class="episodes" id="marinefordList"></div>
-</div>
-
-<div id="dressrosa">
-<h3>Dressrosa (517–746)</h3>
-<div class="episodes" id="dressrosaList"></div>
-</div>
-
-<div id="wano">
-<h3>Wano (747–1155)</h3>
-<div class="episodes" id="wanoList"></div>
-</div>
-
-</div>
-
-<script>
-
-/* PLAYER */
+/* PLAY */
 function playEpisode(num){
 document.getElementById("player").src =
 `https://vidfast.pro/tv/tt0388629/1/${num}?autoPlay=true`;
 }
 
-/* GENERATE EPISODES */
-function generate(start, end, id){
-let container = document.getElementById(id);
+/* ARCS */
+const arcs = [
+{name:"East Blue", start:1, end:61},
+{name:"Alabasta", start:62, end:135},
+{name:"Skypiea", start:136, end:206},
+{name:"Water 7", start:207, end:325},
+{name:"Marineford", start:326, end:516},
+{name:"Dressrosa", start:517, end:746},
+{name:"Wano", start:747, end:1155}
+];
+
+/* LOAD ARCS */
+let arcContainer = document.getElementById("arcList");
+
+arcs.forEach((arc, index)=>{
+let btn = document.createElement("div");
+btn.className="arc";
+btn.innerText = arc.name;
+
+btn.onclick = ()=>{
+document.querySelectorAll(".arc").forEach(a=>a.classList.remove("active"));
+btn.classList.add("active");
+loadEpisodes(arc.start, arc.end);
+};
+
+if(index===0){
+btn.classList.add("active");
+loadEpisodes(arc.start, arc.end);
+}
+
+arcContainer.appendChild(btn);
+});
+
+/* LOAD EPISODES */
+function loadEpisodes(start, end){
+let container = document.getElementById("episodes");
+container.innerHTML="";
 
 for(let i=start;i<=end;i++){
 let ep = document.createElement("div");
-ep.className = "ep";
-ep.innerText = i;
+ep.className="ep";
+ep.innerText=i;
 
-ep.onclick = () => playEpisode(i);
+ep.onclick=()=>playEpisode(i);
 
 container.appendChild(ep);
 }
-}
-
-/* GENERATE ALL */
-generate(1,61,"eastList");
-generate(62,135,"alabastaList");
-generate(136,206,"skypieaList");
-generate(207,325,"water7List");
-generate(326,516,"marinefordList");
-generate(517,746,"dressrosaList");
-generate(747,1155,"wanoList");
-
-/* BURGER MENU */
-function toggleMenu(){
-document.getElementById("sidebar").classList.toggle("active");
-}
-
-/* SCROLL TO ARC */
-function scrollToArc(id){
-document.getElementById(id).scrollIntoView({behavior:"smooth"});
-toggleMenu();
 }
 
 </script>
