@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Kogemi - One Piece</title>
+<title>Kogemi Pro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-
 body{
 margin:0;
 font-family:Arial;
@@ -15,109 +14,80 @@ color:white;
 
 /* HEADER */
 .header{
-display:flex;
-justify-content:space-between;
 padding:15px;
-background:#0b1220;
-}
-
-.logo{
-background:#7c3aed;
-padding:10px;
-border-radius:12px;
-}
-
-/* HERO */
-.hero{
-position:relative;
-height:250px;
-background:url('https://wallpaperaccess.com/full/1119442.jpg') center/cover;
-}
-
-.overlay{
-position:absolute;
-width:100%;
-height:100%;
-background:linear-gradient(to bottom, transparent, #0b1220);
-}
-
-/* POSTER */
-.poster{
-margin-top:-80px;
-padding:15px;
-display:flex;
-gap:15px;
-align-items:flex-end;
-}
-
-.poster img{
-width:120px;
-border-radius:15px;
-}
-
-.title{
-font-size:26px;
+text-align:center;
+background:#111827;
 font-weight:bold;
+font-size:18px;
 }
 
-.info{
-font-size:14px;
-color:#9ca3af;
-margin-top:5px;
-}
-
-/* BUTTON */
-.watch{
-margin:15px;
-background:#7c3aed;
+/* SEARCH */
+.search{
+width:100%;
 padding:12px;
 border:none;
-border-radius:12px;
+outline:none;
+background:#1f2937;
 color:white;
-width:calc(100% - 30px);
-font-size:16px;
-cursor:pointer;
+border-radius:10px;
 }
 
-/* PLAYER */
-.player{
-display:none;
-padding:15px;
-}
-
-iframe{
-width:100%;
-height:220px;
-border-radius:12px;
-border:none;
-}
-
-/* ARC BUTTONS */
-.arcs{
-display:flex;
-overflow-x:auto;
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
 gap:10px;
 padding:10px;
 }
 
-.arc{
+.card{
 background:#1f2937;
-padding:10px 15px;
-border-radius:20px;
-white-space:nowrap;
+border-radius:12px;
+overflow:hidden;
 cursor:pointer;
+transition:0.2s;
 }
 
-.arc.active{
-background:#7c3aed;
+.card:hover{
+transform:scale(1.03);
+}
+
+.card img{
+width:100%;
+height:200px;
+object-fit:cover;
+}
+
+.card-title{
+padding:8px;
+font-size:14px;
+}
+
+/* WATCH PAGE */
+.watch{
+display:none;
+padding:10px;
+}
+
+iframe{
+width:100%;
+aspect-ratio:16/9;
+border:none;
+border-radius:12px;
+}
+
+.back{
+margin:10px;
+cursor:pointer;
+color:#9ca3af;
 }
 
 /* EPISODES */
 .episodes{
 display:grid;
 grid-template-columns:repeat(5,1fr);
-gap:10px;
-padding:15px;
+gap:6px;
+margin-top:10px;
 }
 
 .ep{
@@ -133,108 +103,134 @@ background:#7c3aed;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<!-- HEADER -->
-<div class="header">
-<div class="logo">K</div>
-<div>Kogemi</div>
-<div>☰</div>
+<div class="header">Kogemi</div>
+
+<!-- HOME -->
+<div id="home">
+
+<div style="padding:10px">
+<input class="search" placeholder="Search anime..." oninput="searchAnime(this.value)">
 </div>
 
-<!-- HERO -->
-<div class="hero">
-<div class="overlay"></div>
+<div class="grid" id="results"></div>
+
 </div>
 
-<!-- POSTER + INFO -->
-<div class="poster">
-<img src="https://m.media-amazon.com/images/I/81f8b3M7bPL.jpg">
-<div>
-<div class="title">ONE PIECE</div>
-<div class="info">⭐ 8.8 • 1999 • 24m/ep</div>
-</div>
-</div>
+<!-- WATCH -->
+<div id="watch" class="watch">
 
-<!-- WATCH BUTTON -->
-<button class="watch" onclick="showPlayer()">▶ Watch Now</button>
+<div class="back" onclick="goHome()">← Back</div>
 
-<!-- PLAYER -->
-<div class="player" id="playerBox">
-<iframe id="player"
-src=""></iframe>
-</div>
+<iframe id="player"></iframe>
 
-<!-- ARC SELECT -->
-<div class="arcs" id="arcList"></div>
-
-<!-- EPISODES -->
 <div class="episodes" id="episodes"></div>
+
+</div>
 
 <script>
 
-/* SHOW PLAYER */
-function showPlayer(){
-document.getElementById("playerBox").style.display="block";
-playEpisode(1);
-}
-
-/* PLAY */
-function playEpisode(num){
-document.getElementById("player").src =
-`https://vidfast.pro/tv/tt0388629/1/${num}?autoPlay=true`;
-}
-
-/* ARCS */
-const arcs = [
-{name:"East Blue", start:1, end:61},
-{name:"Alabasta", start:62, end:135},
-{name:"Skypiea", start:136, end:206},
-{name:"Water 7", start:207, end:325},
-{name:"Marineford", start:326, end:516},
-{name:"Dressrosa", start:517, end:746},
-{name:"Wano", start:747, end:1155}
-];
-
-/* LOAD ARCS */
-let arcContainer = document.getElementById("arcList");
-
-arcs.forEach((arc, index)=>{
-let btn = document.createElement("div");
-btn.className="arc";
-btn.innerText = arc.name;
-
-btn.onclick = ()=>{
-document.querySelectorAll(".arc").forEach(a=>a.classList.remove("active"));
-btn.classList.add("active");
-loadEpisodes(arc.start, arc.end);
+/* 🔥 ANIME → IMDB MAP (expand this later) */
+const animeMap = {
+"One Piece": "tt0388629",
+"Naruto": "tt0409591",
+"Attack on Titan": "tt2560140",
+"Death Note": "tt0877057",
+"Demon Slayer": "tt9335498",
+"Jujutsu Kaisen": "tt12343534",
+"Bleach": "tt0434665",
+"Tokyo Ghoul": "tt3741632"
 };
 
-if(index===0){
-btn.classList.add("active");
-loadEpisodes(arc.start, arc.end);
+/* 🔍 SEARCH (JIKAN) */
+function searchAnime(q){
+
+if(!q){
+document.getElementById("results").innerHTML="";
+return;
 }
 
-arcContainer.appendChild(btn);
-});
+fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}`)
+.then(res=>res.json())
+.then(data=>{
+showResults(data.data || []);
+})
+.catch(err=>console.log(err));
 
-/* LOAD EPISODES */
-function loadEpisodes(start, end){
+}
+
+/* 🎴 SHOW RESULTS */
+function showResults(list){
+let container = document.getElementById("results");
+container.innerHTML="";
+
+list.forEach(anime=>{
+
+if(!anime.images?.jpg?.image_url) return;
+
+let card = document.createElement("div");
+card.className="card";
+
+card.innerHTML = `
+<img src="${anime.images.jpg.image_url}">
+<div class="card-title">${anime.title}</div>
+`;
+
+card.onclick=()=>openAnime(anime);
+
+container.appendChild(card);
+
+});
+}
+
+/* ▶ OPEN ANIME */
+function openAnime(anime){
+
+let id = animeMap[anime.title];
+
+if(!id){
+alert("⚠️ No stream available yet (only popular anime supported)");
+return;
+}
+
+document.getElementById("home").style.display="none";
+document.getElementById("watch").style.display="block";
+
+playEpisode(1, id);
+loadEpisodes(id, 50);
+
+}
+
+/* ▶ PLAY */
+function playEpisode(ep, id){
+document.getElementById("player").src =
+`https://vidfast.pro/tv/${id}/1/${ep}?autoPlay=true&theme=7c3aed&nextButton=true&autoNext=true`;
+}
+
+/* 📺 EPISODES */
+function loadEpisodes(id, total){
 let container = document.getElementById("episodes");
 container.innerHTML="";
 
-for(let i=start;i<=end;i++){
+for(let i=1;i<=total;i++){
 let ep = document.createElement("div");
 ep.className="ep";
 ep.innerText=i;
 
-ep.onclick=()=>playEpisode(i);
+ep.onclick=()=>playEpisode(i,id);
 
 container.appendChild(ep);
 }
+}
+
+/* 🔙 BACK */
+function goHome(){
+document.getElementById("watch").style.display="none";
+document.getElementById("home").style.display="block";
+document.getElementById("player").src="";
 }
 
 </script>
