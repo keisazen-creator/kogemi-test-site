@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Kogemi Pro</title>
+<title>Kogemi</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -12,27 +12,23 @@ background:#0b1220;
 color:white;
 }
 
-/* HEADER */
 .header{
 padding:15px;
 text-align:center;
 background:#111827;
-font-weight:bold;
 font-size:18px;
+font-weight:bold;
 }
 
-/* SEARCH */
 .search{
 width:100%;
 padding:12px;
 border:none;
-outline:none;
 background:#1f2937;
 color:white;
 border-radius:10px;
 }
 
-/* GRID */
 .grid{
 display:grid;
 grid-template-columns:repeat(2,1fr);
@@ -45,11 +41,6 @@ background:#1f2937;
 border-radius:12px;
 overflow:hidden;
 cursor:pointer;
-transition:0.2s;
-}
-
-.card:hover{
-transform:scale(1.03);
 }
 
 .card img{
@@ -63,7 +54,6 @@ padding:8px;
 font-size:14px;
 }
 
-/* WATCH PAGE */
 .watch{
 display:none;
 padding:10px;
@@ -77,12 +67,11 @@ border-radius:12px;
 }
 
 .back{
-margin:10px;
+padding:10px;
 cursor:pointer;
 color:#9ca3af;
 }
 
-/* EPISODES */
 .episodes{
 display:grid;
 grid-template-columns:repeat(5,1fr);
@@ -101,7 +90,6 @@ cursor:pointer;
 .ep:hover{
 background:#7c3aed;
 }
-
 </style>
 </head>
 
@@ -109,43 +97,37 @@ background:#7c3aed;
 
 <div class="header">Kogemi</div>
 
-<!-- HOME -->
 <div id="home">
-
 <div style="padding:10px">
 <input class="search" placeholder="Search anime..." oninput="searchAnime(this.value)">
 </div>
-
 <div class="grid" id="results"></div>
-
 </div>
 
-<!-- WATCH -->
 <div id="watch" class="watch">
-
 <div class="back" onclick="goHome()">← Back</div>
-
 <iframe id="player"></iframe>
-
 <div class="episodes" id="episodes"></div>
-
 </div>
 
 <script>
 
-/* 🔥 ANIME → IMDB MAP (expand this later) */
-const animeMap = {
-"One Piece": "tt0388629",
-"Naruto": "tt0409591",
-"Attack on Titan": "tt2560140",
-"Death Note": "tt0877057",
-"Demon Slayer": "tt9335498",
-"Jujutsu Kaisen": "tt12343534",
-"Bleach": "tt0434665",
-"Tokyo Ghoul": "tt3741632"
-};
+/* 🔑 ADD YOUR KEY HERE */
+const OMDB_KEYS = ["YOUR_OMDB_KEY"];
 
-/* 🔍 SEARCH (JIKAN) */
+let keyIndex = 0;
+let cache = {};
+
+/* 🔁 KEY SYSTEM */
+function getKey(){
+return OMDB_KEYS[keyIndex];
+}
+
+function nextKey(){
+keyIndex = (keyIndex + 1) % OMDB_KEYS.length;
+}
+
+/* 🔍 JIKAN SEARCH */
 function searchAnime(q){
 
 if(!q){
@@ -155,10 +137,8 @@ return;
 
 fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}`)
 .then(res=>res.json())
-.then(data=>{
-showResults(data.data || []);
-})
-.catch(err=>console.log(err));
+.then(data=>showResults(data.data || []))
+.catch(console.log);
 
 }
 
@@ -179,28 +159,113 @@ card.innerHTML = `
 <div class="card-title">${anime.title}</div>
 `;
 
-card.onclick=()=>openAnime(anime);
+card.onclick = ()=>openAnime(anime.title);
 
 container.appendChild(card);
 
 });
 }
 
-/* ▶ OPEN ANIME */
-function openAnime(anime){
+/* 🧠 SMART MATCH FUNCTION */
+function findBestMatch(results, title){
 
-let id = animeMap[anime.title];
+title = title.toLowerCase();
 
-if(!id){
-alert("⚠️ No stream available yet (only popular anime supported)");
+return results.find(r =>
+r.Title.toLowerCase().includes(title)
+) || results[0];
+
+}
+
+/* 🎯 GET IMDB (FIXED) */
+async function getIMDB(title){
+
+if(cache[title]) return cache[title];
+
+for(let i=0;i<OMDB_KEYS.length;i++){
+
+try{
+
+let key = getKey();
+
+let res = await fetch(
+`https://www.omdbapi.com/?apikey=${key}&s=${encodeURIComponent(title)}&type=series`
+);
+
+let data = await res.json();
+
+if(data.Search && data.Search.length > 0){
+
+let best = findBestMatch(data.Search, title);
+
+let result = {
+imdbID: best.imdbID,
+Type: "series"
+};
+
+cache[title] = result;
+return result;
+
+}
+
+/* fallback to movie */
+let res2 = await fetch(
+`https://www.omdbapi.com/?apikey=${key}&s=${encodeURIComponent(title)}`
+);
+
+let data2 = await res2.json();
+
+if(data2.Search && data2.Search.length > 0){
+
+let best = findBestMatch(data2.Search, title);
+
+let result = {
+imdbID: best.imdbID,
+Type: best.Type
+};
+
+cache[title] = result;
+return result;
+
+}
+
+if(data.Error && data.Error.includes("limit")){
+nextKey();
+continue;
+}
+
+return null;
+
+}catch(e){
+nextKey();
+}
+
+}
+
+return null;
+}
+
+/* ▶ OPEN */
+async function openAnime(title){
+
+let data = await getIMDB(title);
+
+if(!data){
+alert("No stream available");
 return;
 }
 
 document.getElementById("home").style.display="none";
 document.getElementById("watch").style.display="block";
 
-playEpisode(1, id);
-loadEpisodes(id, 50);
+if(data.Type === "series"){
+playEpisode(1, data.imdbID);
+loadEpisodes(data.imdbID, 50);
+}else{
+document.getElementById("episodes").innerHTML="";
+document.getElementById("player").src =
+`https://vidfast.pro/movie/${data.imdbID}?autoPlay=true&theme=7c3aed`;
+}
 
 }
 
@@ -219,9 +284,7 @@ for(let i=1;i<=total;i++){
 let ep = document.createElement("div");
 ep.className="ep";
 ep.innerText=i;
-
 ep.onclick=()=>playEpisode(i,id);
-
 container.appendChild(ep);
 }
 }
