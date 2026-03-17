@@ -1,134 +1,139 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Kogemi V2</title>
+<title>Kogemi</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#0b1220;color:white;}
-.header{padding:15px;text-align:center;background:#111827;font-weight:bold;}
-.search{width:100%;padding:12px;border:none;background:#1f2937;color:white;border-radius:10px;}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px;}
-.card{background:#1f2937;border-radius:10px;overflow:hidden;cursor:pointer;}
-.card img{width:100%;height:200px;object-fit:cover;}
-.card-title{padding:8px;}
-.watch{display:none;padding:10px;}
-video{width:100%;border-radius:10px;}
-.back{padding:10px;cursor:pointer;}
-.episodes{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:10px;}
-.ep{background:#1f2937;padding:8px;text-align:center;border-radius:8px;cursor:pointer;}
-</style>
-</head>
 
-<body>
-
-<div class="header">Kogemi V2 🔥</div>
-
-<!-- HOME -->
-<div id="home">
-<div style="padding:10px">
-<input class="search" placeholder="Search anime..." oninput="searchAnime(this.value)">
-</div>
-<div class="grid" id="results"></div>
-</div>
-
-<!-- WATCH -->
-<div id="watch" class="watch">
-<div class="back" onclick="goHome()">← Back</div>
-<video id="player" controls></video>
-<div class="episodes" id="episodes"></div>
-</div>
-
-<script>
-
-const API = "https://api.consumet.org";
-
-/* 🔍 SEARCH */
-async function searchAnime(q){
-if(!q) return;
-
-let res = await fetch(`${API}/anime/gogoanime/${q}`);
-let data = await res.json();
-
-showResults(data.results || []);
+/* BASE */
+body{
+margin:0;
+font-family:Arial;
+background:#0b1220;
+color:white;
 }
 
-/* 🎴 SHOW */
-function showResults(list){
-let c = document.getElementById("results");
-c.innerHTML="";
-
-list.forEach(a=>{
-let card=document.createElement("div");
-card.className="card";
-
-card.innerHTML=`
-<img src="${a.image}">
-<div class="card-title">${a.title}</div>
-`;
-
-card.onclick=()=>openAnime(a.id);
-c.appendChild(card);
-});
+/* HEADER */
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px;
+background:#111827;
 }
 
-/* 📺 OPEN ANIME */
-async function openAnime(id){
-
-document.getElementById("home").style.display="none";
-document.getElementById("watch").style.display="block";
-
-let res = await fetch(`${API}/anime/gogoanime/info/${id}`);
-let data = await res.json();
-
-loadEpisodes(data.episodes);
+.logo{
+background:linear-gradient(45deg,#7c3aed,#a855f7);
+padding:10px;
+border-radius:12px;
+font-weight:bold;
 }
 
-/* 📺 LOAD EPISODES */
-function loadEpisodes(list){
-let c=document.getElementById("episodes");
-c.innerHTML="";
-
-list.forEach(ep=>{
-let e=document.createElement("div");
-e.className="ep";
-e.innerText=ep.number;
-
-e.onclick=()=>playEpisode(ep.id);
-c.appendChild(e);
-});
+.menu{
+font-size:20px;
 }
 
-/* ▶ PLAY */
-async function playEpisode(id){
-
-let res = await fetch(`${API}/anime/gogoanime/watch/${id}`);
-let data = await res.json();
-
-let stream = data.sources[0].url;
-
-const video = document.getElementById("player");
-
-if(Hls.isSupported()){
-const hls = new Hls();
-hls.loadSource(stream);
-hls.attachMedia(video);
-}else{
-video.src = stream;
+/* SEARCH */
+.search-box{
+padding:10px;
 }
 
+.search{
+width:100%;
+padding:12px;
+border:none;
+background:#1f2937;
+color:white;
+border-radius:12px;
 }
 
-/* BACK */
-function goHome(){
-document.getElementById("watch").style.display="none";
-document.getElementById("home").style.display="block";
-document.getElementById("player").src="";
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:12px;
+padding:10px;
 }
 
-</script>
+.card{
+background:#1f2937;
+border-radius:15px;
+overflow:hidden;
+cursor:pointer;
+transition:0.3s;
+}
 
-</body>
-</html>
+.card:hover{
+transform:scale(1.05);
+box-shadow:0 0 10px #7c3aed;
+}
+
+.card img{
+width:100%;
+height:200px;
+object-fit:cover;
+}
+
+.card-title{
+padding:8px;
+font-size:14px;
+}
+
+/* WATCH */
+.watch{
+display:none;
+}
+
+/* HERO */
+.hero{
+position:relative;
+height:220px;
+background-size:cover;
+background-position:center;
+}
+
+.overlay{
+position:absolute;
+width:100%;
+height:100%;
+background:linear-gradient(to bottom, transparent, #0b1220);
+}
+
+.hero-content{
+position:absolute;
+bottom:10px;
+left:15px;
+}
+
+.hero-title{
+font-size:22px;
+font-weight:bold;
+}
+
+/* PLAYER */
+.player-box{
+padding:10px;
+}
+
+video{
+width:100%;
+border-radius:12px;
+}
+
+/* EPISODES */
+.episodes{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:8px;
+padding:10px;
+}
+
+.ep{
+background:#1f2937;
+padding:10px;
+border-radius:10px;
+text-align:center;
+cursor
