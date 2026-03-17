@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Kogemi Pro</title>
+<title>Kogemi</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -12,15 +12,13 @@ background:#0b1220;
 color:white;
 }
 
-/* HEADER */
 .header{
 padding:15px;
+text-align:center;
 background:#111827;
 font-weight:bold;
-text-align:center;
 }
 
-/* SEARCH */
 .search{
 width:100%;
 padding:12px;
@@ -31,7 +29,6 @@ color:white;
 border-radius:10px;
 }
 
-/* GRID */
 .grid{
 display:grid;
 grid-template-columns:repeat(2,1fr);
@@ -57,8 +54,7 @@ padding:8px;
 font-size:14px;
 }
 
-/* PLAYER */
-.player{
+.watch-page{
 display:none;
 padding:10px;
 }
@@ -71,9 +67,28 @@ border-radius:10px;
 }
 
 .back{
-padding:10px;
+margin:10px;
 cursor:pointer;
 color:#9ca3af;
+}
+
+.episodes{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:5px;
+margin-top:10px;
+}
+
+.ep{
+background:#1f2937;
+padding:8px;
+text-align:center;
+border-radius:8px;
+cursor:pointer;
+}
+
+.ep:hover{
+background:#7c3aed;
 }
 
 </style>
@@ -83,111 +98,108 @@ color:#9ca3af;
 
 <div class="header">Kogemi</div>
 
-<!-- HOME -->
 <div id="home">
 
 <div style="padding:10px">
 <input class="search" placeholder="Search anime..." oninput="searchAnime(this.value)">
 </div>
 
-<div class="grid" id="results"></div>
+<div class="grid" id="animeList"></div>
 
 </div>
 
-<!-- WATCH -->
-<div id="watch" style="display:none">
+<div class="watch-page" id="watchPage">
 
 <div class="back" onclick="goHome()">← Back</div>
 
-<div class="player" id="playerBox">
 <iframe id="player"></iframe>
-</div>
+
+<div class="episodes" id="episodes"></div>
 
 </div>
 
 <script>
 
-/* 🔑 YOUR API KEY */
-const API_KEY = "fdc7143eae0ef3d73d0484e1fb87056c";
+/* 🔥 PRESET ANIME DATABASE */
+const animeList = [
+{name:"One Piece", img:"https://m.media-amazon.com/images/I/81f8b3M7bPL.jpg", id:"tt0388629"},
+{name:"Naruto", img:"https://m.media-amazon.com/images/I/81j7nZ1pYcL.jpg", id:"tt0409591"},
+{name:"Attack on Titan", img:"https://m.media-amazon.com/images/I/91nZcPpZ5lL.jpg", id:"tt2560140"},
+{name:"Death Note", img:"https://m.media-amazon.com/images/I/71Q1Iu4suSL.jpg", id:"tt0877057"},
+{name:"Demon Slayer", img:"https://m.media-amazon.com/images/I/81k+Z7Hh5FL.jpg", id:"tt9335498"},
+{name:"Jujutsu Kaisen", img:"https://m.media-amazon.com/images/I/81s+5p9rHjL.jpg", id:"tt12343534"}
+];
 
-/* SEARCH */
-function searchAnime(q){
-
-if(!q){
-document.getElementById("results").innerHTML="";
-return;
-}
-
-fetch(`https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=${q}`)
-.then(res=>res.json())
-.then(data=>{
-showResults(data.results);
-});
-}
-
-/* SHOW RESULTS */
-function showResults(list){
-let container = document.getElementById("results");
+/* LOAD */
+function loadAnime(list=animeList){
+let container = document.getElementById("animeList");
 container.innerHTML="";
 
-list.forEach(item=>{
-
-if(!item.poster_path) return;
-
+list.forEach(anime=>{
 let card = document.createElement("div");
 card.className="card";
 
 card.innerHTML = `
-<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">
-<div class="card-title">${item.name}</div>
+<img src="${anime.img}">
+<div class="card-title">${anime.name}</div>
 `;
 
-card.onclick=()=>openAnime(item.id);
+card.onclick=()=>openAnime(anime);
 
 container.appendChild(card);
-
 });
 }
 
-/* OPEN ANIME */
-function openAnime(tmdbId){
+/* SEARCH */
+function searchAnime(q){
+q=q.toLowerCase();
 
-fetch(`https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${API_KEY}&append_to_response=external_ids`)
-.then(res=>res.json())
-.then(data=>{
+let filtered = animeList.filter(a =>
+a.name.toLowerCase().includes(q)
+);
 
-let imdb = data.external_ids.imdb_id;
-
-if(!imdb){
-alert("No player available 😢");
-return;
+loadAnime(filtered);
 }
 
-startPlayer(imdb);
-
-});
-
-}
-
-/* START PLAYER */
-function startPlayer(imdb){
-
+/* OPEN */
+function openAnime(anime){
 document.getElementById("home").style.display="none";
-document.getElementById("watch").style.display="block";
-document.getElementById("playerBox").style.display="block";
+document.getElementById("watchPage").style.display="block";
 
-/* PLAY EPISODE 1 */
+playEpisode(1, anime.id);
+loadEpisodes(anime.id, 50);
+}
+
+/* PLAY */
+function playEpisode(ep, id){
 document.getElementById("player").src =
-`https://vidfast.pro/tv/${imdb}/1/1?autoPlay=true&theme=7c3aed&nextButton=true&autoNext=true`;
+`https://vidfast.pro/tv/${id}/1/${ep}?autoPlay=true&theme=7c3aed&nextButton=true&autoNext=true`;
+}
 
+/* EPISODES */
+function loadEpisodes(id, total){
+let container = document.getElementById("episodes");
+container.innerHTML="";
+
+for(let i=1;i<=total;i++){
+let ep = document.createElement("div");
+ep.className="ep";
+ep.innerText=i;
+
+ep.onclick=()=>playEpisode(i,id);
+
+container.appendChild(ep);
+}
 }
 
 /* BACK */
 function goHome(){
-document.getElementById("watch").style.display="none";
+document.getElementById("watchPage").style.display="none";
 document.getElementById("home").style.display="block";
-document.getElementById("player").src="";
 }
+
+/* INIT */
+loadAnime();
 
 </script>
 
