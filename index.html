@@ -3,201 +3,287 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kogemi Pro</title>
+<title>Kogemi</title>
 
 <style>
-body{margin:0;background:#0b1220;color:white;font-family:sans-serif;}
-nav{display:flex;justify-content:space-between;padding:15px;background:#0b1220;}
-.logo{background:#8b5cf6;padding:10px;border-radius:10px;}
-.row{display:flex;overflow:auto;gap:10px;padding:10px;}
-.card{min-width:120px;}
-.card img{width:100%;border-radius:10px;}
-#player{position:fixed;inset:0;background:#000;display:none;flex-direction:column;}
-iframe{width:100%;height:50%;}
-#episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;padding:10px;}
-.ep{background:#1f2937;padding:10px;text-align:center;border-radius:8px;cursor:pointer;}
-.ep.active{background:#8b5cf6;}
-.controls{display:flex;gap:10px;padding:10px;}
-select{padding:10px;border-radius:10px;background:#1f2937;color:white;border:none;}
+body {
+  margin:0;
+  font-family: Arial;
+  background:#0b1220;
+  color:white;
+}
+
+/* NAV */
+header {
+  padding:15px;
+  display:flex;
+  gap:10px;
+  position:sticky;
+  top:0;
+  background:#0b1220;
+  z-index:10;
+}
+
+input {
+  flex:1;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+}
+
+button {
+  padding:10px 15px;
+  background:#8b5cf6;
+  border:none;
+  color:white;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* GRID */
+#results {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  padding:10px;
+}
+
+.card {
+  background:#111827;
+  padding:10px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:.2s;
+}
+.card:hover { transform:scale(1.05); }
+
+.card img {
+  width:100%;
+  border-radius:10px;
+}
+
+/* PLAYER */
+#playerBox {
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:none;
+  flex-direction:column;
+  z-index:100;
+}
+
+iframe {
+  width:100%;
+  height:50%;
+  border:none;
+}
+
+/* TOP BAR PLAYER */
+.player-top {
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+}
+
+.close-btn {
+  background:red;
+}
+
+/* CONTROLS */
+.controls {
+  display:flex;
+  gap:10px;
+  padding:10px;
+}
+
+/* EPISODES */
+#episodes {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(60px,1fr));
+  gap:8px;
+  padding:10px;
+  overflow:auto;
+  height:50%;
+}
+
+.ep {
+  background:#1f2937;
+  padding:10px;
+  text-align:center;
+  border-radius:8px;
+  cursor:pointer;
+}
+.ep.active {
+  background:#8b5cf6;
+}
+
+/* LOADER */
+.loader {
+  text-align:center;
+  padding:20px;
+}
 </style>
 </head>
 
 <body>
 
-<nav>
-  <div class="logo">K</div>
-</nav>
+<header>
+  <input id="searchInput" placeholder="Search anime...">
+  <button onclick="search()">Search</button>
+</header>
 
-<div class="row" id="trending"></div>
+<div id="results"></div>
 
-<div id="player">
-  <button onclick="closePlayer()">✕</button>
+<!-- PLAYER -->
+<div id="playerBox">
 
-  <!-- SEASON -->
-  <div class="controls">
-    <select id="seasonSelect" onchange="changeSeason()">
-      <option value="1">Season 1</option>
-      <option value="2">Season 2</option>
-      <option value="3">Season 3</option>
-    </select>
+  <div class="player-top">
+    <button class="close-btn" onclick="closePlayer()">✕</button>
+    <div>Episode <span id="epNum">1</span></div>
   </div>
 
   <iframe id="iframe"></iframe>
+
+  <div class="controls">
+    <button onclick="prevEp()">⏮ Prev</button>
+    <button onclick="nextEp()">⏭ Next</button>
+  </div>
+
   <div id="episodes"></div>
+
 </div>
 
 <script>
-const API="https://kogemi-api-3.onrender.com";
-const JIKAN="https://api.jikan.moe/v4";
+const API = "https://kogemi-api-3.onrender.com";
 
-let currentImdb=null;
-let currentEp=1;
-let totalEps=12;
-let currentSeason=1;
-let currentTitle="";
+let currentImdb = null;
+let currentEp = 1;
+let totalEps = 50;
 
-/* LOAD HOME */
-window.onload=async()=>{
-  const res=await fetch(`${JIKAN}/top/anime`);
-  const data=await res.json();
+/* 🔍 SEARCH */
+async function search() {
+  const q = document.getElementById("searchInput").value;
 
-  const row=document.getElementById("trending");
+  const container = document.getElementById("results");
+  container.innerHTML = "<div class='loader'>Loading...</div>";
 
-  data.data.slice(0,10).forEach(a=>{
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`<img src="${a.images.jpg.image_url}"><p>${a.title}</p>`;
-    div.onclick=()=>selectAnime(a.title);
-    row.appendChild(div);
+  const res = await fetch(`${API}/search?q=${q}`);
+  const data = await res.json();
+
+  container.innerHTML = "";
+
+  data.forEach(anime => {
+    const title = anime.title.english || anime.title.romaji;
+
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <img src="${anime.coverImage.large}">
+      <p>${title}</p>
+    `;
+
+    div.onclick = () => selectAnime(title);
+
+    container.appendChild(div);
   });
+}
 
-  loadContinue();
-};
+/* 🎬 SELECT ANIME */
+async function selectAnime(title) {
+  const clean = title.split(":")[0];
 
-/* SELECT */
-async function selectAnime(title){
-  currentTitle=title;
-  const clean=title.split(":")[0];
+  alert("Loading " + clean);
 
-  // EP COUNT
-  try{
-    const j=await fetch(`${JIKAN}/anime?q=${clean}&limit=1`);
-    const jd=await j.json();
-    totalEps=jd.data[0].episodes||12;
-  }catch{totalEps=12;}
+  const res = await fetch(`${API}/imdb?title=${encodeURIComponent(clean)}`);
+  const data = await res.json();
 
-  const res=await fetch(`${API}/imdb?title=${encodeURIComponent(clean)}`);
-  const data=await res.json();
+  if (!data.imdb) {
+    alert("No stream found");
+    return;
+  }
 
-  if(!data.imdb){alert("No stream");return;}
+  currentImdb = data.imdb;
 
-  currentImdb=data.imdb;
+  // smarter episode guess
+  if (clean.toLowerCase().includes("one piece")) totalEps = 1100;
+  else if (clean.toLowerCase().includes("naruto")) totalEps = 220;
+  else if (clean.toLowerCase().includes("bleach")) totalEps = 366;
+  else totalEps = 50;
 
   buildEpisodes();
   playEpisode(1);
 
-  document.getElementById("player").style.display="flex";
+  document.getElementById("playerBox").style.display = "flex";
 }
 
-/* PLAY */
-async function playEpisode(ep){
-  currentEp=ep;
+/* ▶ PLAY */
+async function playEpisode(ep) {
+  currentEp = ep;
 
-  const res=await fetch(`${API}/stream?imdb=${currentImdb}&ep=${ep}`);
-  const data=await res.json();
+  document.getElementById("epNum").innerText = ep;
 
-  let url=data.url;
+  const res = await fetch(`${API}/stream?imdb=${currentImdb}&ep=${ep}`);
+  const data = await res.json();
 
-  // 🔥 FALLBACK
-  if(!url){
-    url=`https://vidsrc.xyz/embed/tv/${currentImdb}/${currentSeason}/${ep}`;
-  }
+  document.getElementById("iframe").src =
+    data.url || data.backup;
 
-  document.getElementById("iframe").src=url;
-
-  highlight();
-  saveProgress();
-
-  // 🔥 AUTO NEXT (25 min)
-  clearTimeout(window.autoNext);
-  window.autoNext=setTimeout(()=>{
-    nextEpisode();
-  }, 25*60*1000);
+  highlightEp();
 }
 
-/* NEXT */
-function nextEpisode(){
-  if(currentEp<totalEps){
-    playEpisode(currentEp+1);
+/* ⏭ NEXT */
+function nextEp() {
+  if (currentEp < totalEps) {
+    playEpisode(currentEp + 1);
   }
 }
 
-/* SEASON CHANGE */
-function changeSeason(){
-  currentSeason=document.getElementById("seasonSelect").value;
-  playEpisode(1);
+/* ⏮ PREV */
+function prevEp() {
+  if (currentEp > 1) {
+    playEpisode(currentEp - 1);
+  }
 }
 
-/* EPISODES */
-function buildEpisodes(){
-  const box=document.getElementById("episodes");
-  box.innerHTML="";
+/* ❌ CLOSE */
+function closePlayer() {
+  document.getElementById("playerBox").style.display = "none";
+  document.getElementById("iframe").src = "";
+}
 
-  for(let i=1;i<=totalEps;i++){
-    const d=document.createElement("div");
-    d.className="ep";
-    d.innerText=i;
-    d.onclick=()=>playEpisode(i);
-    box.appendChild(d);
+/* EP LIST */
+function buildEpisodes() {
+  const container = document.getElementById("episodes");
+  container.innerHTML = "";
+
+  for (let i = 1; i <= totalEps; i++) {
+    const btn = document.createElement("div");
+    btn.className = "ep";
+    btn.innerText = i;
+
+    btn.onclick = () => playEpisode(i);
+
+    container.appendChild(btn);
   }
 }
 
 /* ACTIVE */
-function highlight(){
-  document.querySelectorAll(".ep").forEach(e=>e.classList.remove("active"));
-  document.querySelectorAll(".ep")[currentEp-1]?.classList.add("active");
+function highlightEp() {
+  document.querySelectorAll(".ep").forEach(e => e.classList.remove("active"));
+  const el = document.querySelectorAll(".ep")[currentEp - 1];
+  if (el) el.classList.add("active");
 }
 
-/* CLOSE */
-function closePlayer(){
-  document.getElementById("player").style.display="none";
-  document.getElementById("iframe").src="";
-}
+/* 🔥 AUTOPLAY */
+setInterval(() => {
+  const iframe = document.getElementById("iframe");
 
-/* 💾 SAVE WATCH */
-function saveProgress(){
-  const data={
-    title:currentTitle,
-    imdb:currentImdb,
-    ep:currentEp,
-    time:Date.now()
-  };
+  if (iframe.src && iframe.src.includes("ended")) {
+    nextEp();
+  }
+}, 4000);
 
-  localStorage.setItem("continue",JSON.stringify(data));
-
-  let history=JSON.parse(localStorage.getItem("history")||"[]");
-  history.unshift(data);
-  localStorage.setItem("history",JSON.stringify(history.slice(0,20)));
-}
-
-/* 🔁 CONTINUE */
-function loadContinue(){
-  const data=JSON.parse(localStorage.getItem("continue"));
-  if(!data) return;
-
-  const div=document.createElement("div");
-  div.style.padding="10px";
-  div.innerHTML=`▶ Continue ${data.title} (Ep ${data.ep})`;
-
-  div.onclick=()=>{
-    currentImdb=data.imdb;
-    currentTitle=data.title;
-    playEpisode(data.ep);
-    document.getElementById("player").style.display="flex";
-  };
-
-  document.body.prepend(div);
-}
 </script>
 
 </body>
