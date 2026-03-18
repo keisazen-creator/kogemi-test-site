@@ -6,284 +6,202 @@
 <title>Kogemi</title>
 
 <style>
-body {
-  margin:0;
-  font-family: Arial;
-  background:#0b1220;
-  color:white;
-}
+body{margin:0;font-family:system-ui;background:#0b1220;color:white}
 
 /* NAV */
-header {
-  padding:15px;
-  display:flex;
-  gap:10px;
-  position:sticky;
-  top:0;
-  background:#0b1220;
-  z-index:10;
-}
+nav{display:flex;justify-content:space-between;padding:15px;background:#0b1220;position:sticky;top:0}
+.logo{font-weight:bold;color:#8b5cf6}
 
-input {
-  flex:1;
-  padding:12px;
-  border-radius:10px;
-  border:none;
-}
+/* HERO */
+#hero{height:60vh;background-size:cover;display:flex;align-items:flex-end;padding:20px}
+.hero-title{font-size:28px;font-weight:bold}
 
-button {
-  padding:10px 15px;
-  background:#8b5cf6;
-  border:none;
-  color:white;
-  border-radius:10px;
-  cursor:pointer;
-}
-
-/* GRID */
-#results {
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-  padding:10px;
-}
-
-.card {
-  background:#111827;
-  padding:10px;
-  border-radius:10px;
-  cursor:pointer;
-  transition:.2s;
-}
-.card:hover { transform:scale(1.05); }
-
-.card img {
-  width:100%;
-  border-radius:10px;
-}
+/* ROW */
+.section{padding:15px}
+.row{display:flex;gap:10px;overflow:auto}
+.card{min-width:120px;cursor:pointer}
+.card img{width:100%;border-radius:10px}
 
 /* PLAYER */
-#playerBox {
-  position:fixed;
-  inset:0;
-  background:#000;
-  display:none;
-  flex-direction:column;
-  z-index:100;
-}
-
-iframe {
-  width:100%;
-  height:50%;
-  border:none;
-}
-
-/* TOP BAR PLAYER */
-.player-top {
-  display:flex;
-  justify-content:space-between;
-  padding:10px;
-}
-
-.close-btn {
-  background:red;
-}
+#player{position:fixed;inset:0;background:black;display:none;flex-direction:column}
+iframe{width:100%;height:50%}
 
 /* CONTROLS */
-.controls {
-  display:flex;
-  gap:10px;
-  padding:10px;
-}
+.controls{display:flex;gap:10px;padding:10px}
+select{padding:10px;background:#1f2937;color:white;border:none;border-radius:8px}
 
 /* EPISODES */
-#episodes {
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(60px,1fr));
-  gap:8px;
-  padding:10px;
-  overflow:auto;
-  height:50%;
-}
+#episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;padding:10px;overflow:auto}
+.ep{background:#1f2937;padding:10px;text-align:center;border-radius:8px;cursor:pointer}
+.ep.active{background:#8b5cf6}
 
-.ep {
-  background:#1f2937;
-  padding:10px;
-  text-align:center;
-  border-radius:8px;
-  cursor:pointer;
-}
-.ep.active {
-  background:#8b5cf6;
-}
-
-/* LOADER */
-.loader {
-  text-align:center;
-  padding:20px;
-}
+/* SEARCH */
+#searchBox{display:none;padding:10px}
+input{width:100%;padding:12px;border-radius:10px;border:none}
 </style>
 </head>
 
 <body>
 
-<header>
-  <input id="searchInput" placeholder="Search anime...">
-  <button onclick="search()">Search</button>
-</header>
+<nav>
+<div class="logo">Kogemi</div>
+<button onclick="toggleSearch()">🔍</button>
+</nav>
 
-<div id="results"></div>
+<div id="searchBox">
+<input id="searchInput" placeholder="Search..." onkeyup="search()">
+</div>
 
-<!-- PLAYER -->
-<div id="playerBox">
+<div id="hero">
+<div class="hero-title" id="heroTitle">Loading...</div>
+</div>
 
-  <div class="player-top">
-    <button class="close-btn" onclick="closePlayer()">✕</button>
-    <div>Episode <span id="epNum">1</span></div>
-  </div>
+<div class="section">
+<h3>🔥 Trending</h3>
+<div class="row" id="row"></div>
+</div>
 
-  <iframe id="iframe"></iframe>
+<div id="player">
+<div class="controls">
+<button onclick="closePlayer()">✕</button>
+<select id="seasonSelect" onchange="changeSeason()"></select>
+<button onclick="prevEp()">⏮</button>
+<button onclick="nextEp()">⏭</button>
+</div>
 
-  <div class="controls">
-    <button onclick="prevEp()">⏮ Prev</button>
-    <button onclick="nextEp()">⏭ Next</button>
-  </div>
-
-  <div id="episodes"></div>
-
+<iframe id="iframe"></iframe>
+<div id="episodes"></div>
 </div>
 
 <script>
-const API = "https://kogemi-api-3.onrender.com";
+const API="https://kogemi-api-3.onrender.com";
+const JIKAN="https://api.jikan.moe/v4";
 
-let currentImdb = null;
-let currentEp = 1;
-let totalEps = 50;
+let imdb=null,tmdb=null,season=1,currentEp=1,totalEps=12;
 
-/* 🔍 SEARCH */
-async function search() {
-  const q = document.getElementById("searchInput").value;
+/* LOAD HOME */
+window.onload=async()=>{
+const res=await fetch(`${JIKAN}/top/anime`);
+const data=await res.json();
 
-  const container = document.getElementById("results");
-  container.innerHTML = "<div class='loader'>Loading...</div>";
+loadHero(data.data[0]);
+buildRow(data.data.slice(0,10));
+};
 
-  const res = await fetch(`${API}/search?q=${q}`);
-  const data = await res.json();
-
-  container.innerHTML = "";
-
-  data.forEach(anime => {
-    const title = anime.title.english || anime.title.romaji;
-
-    const div = document.createElement("div");
-    div.className = "card";
-
-    div.innerHTML = `
-      <img src="${anime.coverImage.large}">
-      <p>${title}</p>
-    `;
-
-    div.onclick = () => selectAnime(title);
-
-    container.appendChild(div);
-  });
+/* HERO */
+function loadHero(a){
+document.getElementById("hero").style.backgroundImage=`url(${a.images.jpg.large_image_url})`;
+document.getElementById("heroTitle").innerText=a.title;
 }
 
-/* 🎬 SELECT ANIME */
-async function selectAnime(title) {
-  const clean = title.split(":")[0];
-
-  alert("Loading " + clean);
-
-  const res = await fetch(`${API}/imdb?title=${encodeURIComponent(clean)}`);
-  const data = await res.json();
-
-  if (!data.imdb) {
-    alert("No stream found");
-    return;
-  }
-
-  currentImdb = data.imdb;
-
-  // smarter episode guess
-  if (clean.toLowerCase().includes("one piece")) totalEps = 1100;
-  else if (clean.toLowerCase().includes("naruto")) totalEps = 220;
-  else if (clean.toLowerCase().includes("bleach")) totalEps = 366;
-  else totalEps = 50;
-
-  buildEpisodes();
-  playEpisode(1);
-
-  document.getElementById("playerBox").style.display = "flex";
+/* ROW */
+function buildRow(list){
+const row=document.getElementById("row");
+row.innerHTML="";
+list.forEach(a=>{
+const div=document.createElement("div");
+div.className="card";
+div.innerHTML=`<img src="${a.images.jpg.image_url}"><p>${a.title}</p>`;
+div.onclick=()=>selectAnime(a.title);
+row.appendChild(div);
+});
 }
 
-/* ▶ PLAY */
-async function playEpisode(ep) {
-  currentEp = ep;
-
-  document.getElementById("epNum").innerText = ep;
-
-  const res = await fetch(`${API}/stream?imdb=${currentImdb}&ep=${ep}`);
-  const data = await res.json();
-
-  document.getElementById("iframe").src =
-    data.url || data.backup;
-
-  highlightEp();
+/* SEARCH */
+function toggleSearch(){
+const box=document.getElementById("searchBox");
+box.style.display=box.style.display==="block"?"none":"block";
 }
 
-/* ⏭ NEXT */
-function nextEp() {
-  if (currentEp < totalEps) {
-    playEpisode(currentEp + 1);
-  }
+async function search(){
+const q=document.getElementById("searchInput").value;
+if(!q)return;
+
+const res=await fetch(`${API}/search?q=${q}`);
+const data=await res.json();
+
+buildRow(data.map(a=>({
+title:a.title.romaji,
+images:{jpg:{image_url:a.coverImage.large}}
+})));
 }
 
-/* ⏮ PREV */
-function prevEp() {
-  if (currentEp > 1) {
-    playEpisode(currentEp - 1);
-  }
+/* SELECT */
+async function selectAnime(title){
+const clean=title.split(":")[0];
+
+const epRes=await fetch(`${API}/anime-info?title=${encodeURIComponent(clean)}`);
+const epData=await epRes.json();
+totalEps=epData.episodes||12;
+
+const res=await fetch(`${API}/imdb?title=${encodeURIComponent(clean)}`);
+const data=await res.json();
+
+if(!data.imdb){alert("No stream");return;}
+
+imdb=data.imdb;
+tmdb=data.tmdb;
+
+buildSeasons(1);
+buildEpisodes();
+playEpisode(1);
+
+document.getElementById("player").style.display="flex";
 }
 
-/* ❌ CLOSE */
-function closePlayer() {
-  document.getElementById("playerBox").style.display = "none";
-  document.getElementById("iframe").src = "";
+/* SEASONS */
+function buildSeasons(n){
+const s=document.getElementById("seasonSelect");
+s.innerHTML="";
+for(let i=1;i<=n;i++){
+const o=document.createElement("option");
+o.value=i;o.text="Season "+i;
+s.appendChild(o);
+}
 }
 
-/* EP LIST */
-function buildEpisodes() {
-  const container = document.getElementById("episodes");
-  container.innerHTML = "";
-
-  for (let i = 1; i <= totalEps; i++) {
-    const btn = document.createElement("div");
-    btn.className = "ep";
-    btn.innerText = i;
-
-    btn.onclick = () => playEpisode(i);
-
-    container.appendChild(btn);
-  }
+function changeSeason(){
+season=document.getElementById("seasonSelect").value;
+playEpisode(1);
 }
 
-/* ACTIVE */
-function highlightEp() {
-  document.querySelectorAll(".ep").forEach(e => e.classList.remove("active"));
-  const el = document.querySelectorAll(".ep")[currentEp - 1];
-  if (el) el.classList.add("active");
+/* PLAY */
+async function playEpisode(ep){
+currentEp=ep;
+
+const res=await fetch(`${API}/stream?imdb=${imdb}&season=${season}&ep=${ep}`);
+const data=await res.json();
+
+document.getElementById("iframe").src=data.primary||data.backup;
+
+highlight();
 }
 
-/* 🔥 AUTOPLAY */
-setInterval(() => {
-  const iframe = document.getElementById("iframe");
+/* EP */
+function buildEpisodes(){
+const box=document.getElementById("episodes");
+box.innerHTML="";
+for(let i=1;i<=totalEps;i++){
+const d=document.createElement("div");
+d.className="ep";
+d.innerText=i;
+d.onclick=()=>playEpisode(i);
+box.appendChild(d);
+}
+}
 
-  if (iframe.src && iframe.src.includes("ended")) {
-    nextEp();
-  }
-}, 4000);
+function highlight(){
+document.querySelectorAll(".ep").forEach(e=>e.classList.remove("active"));
+document.querySelectorAll(".ep")[currentEp-1]?.classList.add("active");
+}
 
+/* NAV */
+function nextEp(){if(currentEp<totalEps)playEpisode(currentEp+1);}
+function prevEp(){if(currentEp>1)playEpisode(currentEp-1);}
+function closePlayer(){
+document.getElementById("player").style.display="none";
+document.getElementById("iframe").src="";
+}
 </script>
 
 </body>
