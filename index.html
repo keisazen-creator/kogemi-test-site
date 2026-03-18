@@ -2,23 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kogemi Pro | HiAnime Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kogemi Pro | Ultimate Edition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg: #0e0e0e;
-            --sidebar: #141414;
-            --surface: #1f1f1f;
-            --accent: #ffb100; /* HiAnime Yellow */
-            --accent-rgb: 255, 177, 0;
+            --bg: #0b0c11;
+            --sidebar: #14151a;
+            --surface: #1f2129;
+            --accent: #ffb100;
             --text: #ffffff;
-            --muted: #aaaaaa;
+            --muted: #94a3b8;
             --glass: rgba(255, 255, 255, 0.05);
-            --sidebar-width: 260px;
+            --sidebar-width: 280px;
+            --bottom-nav-height: 70px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
         body {
             background: var(--bg);
             color: var(--text);
@@ -28,14 +29,13 @@
             overflow: hidden;
         }
 
-        /* --- SIDEBAR --- */
+        /* --- DESKTOP SIDEBAR (No Hamburger) --- */
         #sidebar {
             width: var(--sidebar-width);
             background: var(--sidebar);
             display: flex;
             flex-direction: column;
             border-right: 1px solid var(--glass);
-            transition: 0.3s;
             z-index: 1001;
         }
 
@@ -46,103 +46,111 @@
             color: var(--accent);
             text-transform: uppercase;
             letter-spacing: -1px;
+            cursor: pointer;
         }
 
-        .nav-links { flex-grow: 1; padding: 0 15px; }
+        .nav-links { flex-grow: 1; padding: 0 15px; overflow-y: auto; }
         .nav-item {
             padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 5px;
+            border-radius: 12px;
+            margin-bottom: 6px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 15px;
             color: var(--muted);
-            transition: 0.2s;
+            transition: all 0.2s ease;
         }
         .nav-item:hover, .nav-item.active { background: var(--surface); color: var(--text); }
         .nav-item.active i { color: var(--accent); }
 
-        /* --- MAIN CONTENT --- */
+        /* --- MOBILE BOTTOM NAV (The Hamburger Replacement) --- */
+        #mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: rgba(20, 21, 26, 0.95);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid var(--glass);
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1002;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .m-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--muted);
+            font-size: 0.7rem;
+            gap: 5px;
+            text-decoration: none;
+        }
+        .m-nav-item.active { color: var(--accent); }
+        .m-nav-item i { font-size: 1.2rem; }
+
+        /* --- MAIN VIEW --- */
         #main-view {
             flex-grow: 1;
             overflow-y: auto;
             position: relative;
-            scroll-behavior: smooth;
+            padding-bottom: 100px; /* Space for mobile nav */
         }
 
         header {
             position: sticky; top: 0;
             padding: 15px 40px;
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(14, 14, 14, 0.8);
+            background: rgba(11, 12, 17, 0.8);
             backdrop-filter: blur(20px);
             z-index: 1000;
         }
 
-        .search-container { position: relative; width: 400px; }
+        .search-container { position: relative; width: 100%; max-width: 500px; margin: 0 20px; }
         .search-bar {
             width: 100%;
             background: var(--surface);
-            border: none;
+            border: 1px solid var(--glass);
             padding: 12px 20px;
-            border-radius: 25px;
+            border-radius: 12px;
             color: white;
-            outline: 2px solid transparent;
-            transition: 0.3s;
+            outline: none;
         }
-        .search-bar:focus { outline-color: var(--accent); }
 
         #search-results {
-            position: absolute; top: 120%; left: 0; width: 100%;
+            position: absolute; top: 110%; left: 0; right: 0;
             background: var(--surface); border-radius: 12px;
-            overflow: hidden; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-height: 400px; overflow-y: auto; display: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            z-index: 9999;
         }
 
-        /* --- FILTERS --- */
-        .filter-row { padding: 20px 40px; display: flex; gap: 10px; overflow-x: auto; }
-        .filter-btn {
-            padding: 8px 18px;
-            background: var(--surface);
-            border-radius: 20px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .filter-btn.active { background: var(--accent); color: black; font-weight: 600; }
-
-        /* --- HERO --- */
+        /* --- HERO & GRIDS --- */
         #hero {
-            height: 500px;
+            height: 450px;
             margin: 20px 40px;
             border-radius: 20px;
             background-size: cover;
             background-position: center;
-            position: relative;
             display: flex;
             align-items: flex-end;
-            padding: 60px;
+            padding: 40px;
+            position: relative;
             overflow: hidden;
         }
-        #hero::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(to top, var(--bg), transparent);
-        }
+        #hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, var(--bg), transparent); }
 
-        /* --- CARDS --- */
         .shelf { padding: 20px 40px; }
-        .shelf-title { font-size: 1.4rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .shelf-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); 
-            gap: 20px; 
-        }
+        .shelf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
         .anime-card { cursor: pointer; transition: 0.3s; }
-        .anime-card:hover { transform: translateY(-10px); }
+        .anime-card:hover { transform: scale(1.05); }
         .anime-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 12px; }
-        .anime-card .title { font-size: 0.9rem; margin-top: 10px; font-weight: 600; }
 
-        /* --- FULL SCREEN PLAYER --- */
+        /* --- PLAYER --- */
         #player-modal {
             position: fixed; inset: 0;
             background: var(--bg);
@@ -151,78 +159,29 @@
             flex-direction: column;
         }
 
-        .player-top {
-            padding: 20px 40px;
-            display: flex; justify-content: space-between;
-            background: var(--sidebar);
-        }
-
-        .player-body {
-            display: flex;
-            height: calc(100vh - 80px);
-        }
-
-        .video-side { flex-grow: 1; background: #000; position: relative; }
+        .player-body { display: flex; height: 100%; }
+        .video-side { flex-grow: 1; background: #000; }
+        .controls-side { width: 380px; background: var(--sidebar); display: flex; flex-direction: column; overflow-y: auto; }
+        
         #main-frame { width: 100%; height: 100%; border: none; }
 
-        .controls-side {
-            width: 400px;
-            background: var(--sidebar);
-            border-left: 1px solid var(--glass);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .selector-box { padding: 20px; border-bottom: 1px solid var(--glass); }
-        select {
-            width: 100%;
-            padding: 12px;
-            background: var(--surface);
-            color: white;
-            border: 1px solid var(--glass);
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
-        .ep-list {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
         .ep-thumb-card {
-            display: flex;
-            gap: 15px;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-bottom: 10px;
-            transition: 0.2s;
+            display: flex; gap: 12px; padding: 12px; border-radius: 10px;
+            cursor: pointer; margin: 5px 15px; border: 1px solid transparent;
         }
-        .ep-thumb-card:hover { background: var(--surface); }
-        .ep-thumb-card.active { background: rgba(255, 177, 0, 0.1); border: 1px solid var(--accent); }
-        .ep-thumb-card img { width: 120px; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; }
-        
-        .server-list {
-            padding: 20px;
-            display: flex;
-            gap: 10px;
-            background: var(--surface);
-        }
-        .server-btn {
-            padding: 8px 15px;
-            background: var(--bg);
-            border-radius: 6px;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-        .server-btn.active { background: var(--accent); color: black; font-weight: bold; }
+        .ep-thumb-card.active { background: rgba(255,177,0,0.1); border-color: var(--accent); }
+        .ep-thumb-card img { width: 100px; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; }
 
-        @media (max-width: 1000px) {
+        /* --- RESPONSIVE --- */
+        @media (max-width: 900px) {
             #sidebar { display: none; }
+            #mobile-nav { display: flex; }
+            header { padding: 15px 20px; }
+            #hero { margin: 10px; height: 300px; padding: 20px; }
+            .shelf { padding: 20px; }
             .player-body { flex-direction: column; }
-            .controls-side { width: 100%; height: 400px; }
-            .video-side { height: 300px; flex-grow: 0; }
+            .controls-side { width: 100%; height: 50%; }
+            .video-side { height: 50%; }
         }
     </style>
 </head>
@@ -233,76 +192,57 @@
         <nav class="nav-links">
             <div class="nav-item active"><i class="fa fa-home"></i> Home</div>
             <div class="nav-item"><i class="fa fa-fire"></i> Trending</div>
-            <div class="nav-item"><i class="fa fa-star"></i> Top Rated</div>
-            <div class="nav-item"><i class="fa fa-clock"></i> Recently Added</div>
+            <div style="margin-top: 30px; padding: 0 15px;">
+                <p style="font-size: 0.7rem; color: var(--muted); text-transform: uppercase; margin-bottom: 15px;">History</p>
+                <div id="history-list"></div>
+            </div>
         </nav>
     </aside>
+
+    <nav id="mobile-nav">
+        <a href="#" class="m-nav-item active"><i class="fa fa-home"></i><span>Home</span></a>
+        <a href="#" class="m-nav-item"><i class="fa fa-compass"></i><span>Discover</span></a>
+        <a href="#" class="m-nav-item"><i class="fa fa-history"></i><span>History</span></a>
+        <a href="#" class="m-nav-item"><i class="fa fa-user"></i><span>Profile</span></a>
+    </nav>
 
     <main id="main-view">
         <header>
             <div class="search-container">
-                <input type="text" class="search-bar" id="search-bar" placeholder="Type name to search...">
+                <input type="text" class="search-bar" id="search-bar" placeholder="Search anime...">
                 <div id="search-results"></div>
-            </div>
-            <div style="display: flex; gap: 20px; align-items: center;">
-                <i class="fa fa-bell" style="color: var(--muted)"></i>
-                <div style="width: 35px; height: 35px; background: var(--accent); border-radius: 50%;"></div>
             </div>
         </header>
 
         <section id="hero">
             <div style="z-index: 2">
-                <h1 id="hero-title" style="font-size: 3rem; margin-bottom: 20px;"></h1>
-                <button class="filter-btn active" id="hero-btn" style="padding: 15px 30px;">WATCH NOW</button>
+                <h1 id="hero-title" style="font-size: 2.5rem; margin-bottom: 15px;"></h1>
+                <button onclick="document.getElementById('hero-btn').click()" id="hero-btn-real" style="padding: 12px 25px; background: var(--accent); border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">WATCH NOW</button>
             </div>
         </section>
 
-        <div class="filter-row">
-            <div class="filter-btn active">All</div>
-            <div class="filter-btn">Action</div>
-            <div class="filter-btn">Adventure</div>
-            <div class="filter-btn">Fantasy</div>
-            <div class="filter-btn">Sci-Fi</div>
-            <div class="filter-btn">Isekai</div>
-        </div>
-
         <div class="shelf">
-            <div class="shelf-title"><i class="fa fa-bolt" style="color: var(--accent)"></i> Trending Now</div>
+            <h2 style="margin-bottom: 20px;">Trending Now</h2>
             <div class="shelf-grid" id="trending-grid"></div>
         </div>
     </main>
 
     <div id="player-modal">
-        <div class="player-top">
-            <div id="player-meta">
-                <h2 id="now-playing-title">Anime Title</h2>
-                <span id="now-playing-ep" style="color: var(--accent)">Episode 1</span>
-            </div>
-            <button class="filter-btn" onclick="closePlayer()">CLOSE ✕</button>
+        <div style="padding: 15px 25px; background: var(--sidebar); display: flex; justify-content: space-between; align-items: center;">
+            <h3 id="playing-title">Anime Title</h3>
+            <button onclick="closePlayer()" style="background: var(--surface); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer;">CLOSE ✕</button>
         </div>
-
         <div class="player-body">
             <div class="video-side">
-                <iframe id="main-frame" allowfullscreen scrolling="no"></iframe>
+                <iframe id="main-frame" allowfullscreen></iframe>
             </div>
-
             <div class="controls-side">
-                <div class="selector-box">
-                    <label style="font-size: 0.8rem; color: var(--muted)">SEASON</label>
-                    <select id="season-select" onchange="changeSeason()">
+                <div style="padding: 20px;">
+                    <select id="season-select" onchange="changeSeason()" style="width: 100%; padding: 12px; background: var(--surface); color: white; border-radius: 8px; border: none;">
                         <option value="1">Season 1</option>
-                        <option value="2">Season 2</option>
-                        <option value="3">Season 3</option>
                     </select>
                 </div>
-
-                <div class="server-list" id="server-list">
-                    <div class="server-btn active" onclick="switchServer('primary')">Server 1</div>
-                    <div class="server-btn" onclick="switchServer('backup')">Server 2</div>
-                </div>
-
-                <div class="ep-list" id="ep-list">
-                    </div>
+                <div id="ep-list"></div>
             </div>
         </div>
     </div>
@@ -311,153 +251,99 @@
         const API = "https://kogemi-api-3.onrender.com";
         const JIKAN = "https://api.jikan.moe/v4";
 
-        let state = {
-            imdb: null,
-            title: '',
-            currentEp: 1,
-            totalEps: 0,
-            currentSeason: 1,
-            server: 'primary',
-            data: null
-        };
+        let state = { imdb: null, title: '', currentEp: 1, totalEps: 0, currentSeason: 1 };
 
-        // --- LOAD HOME ---
         window.onload = async () => {
             const res = await fetch(`${JIKAN}/top/anime?limit=20`);
             const { data } = await res.json();
             
-            // Hero Setup
             const hero = data[0];
             document.getElementById('hero').style.backgroundImage = `url(${hero.images.jpg.large_image_url})`;
             document.getElementById('hero-title').innerText = hero.title;
-            document.getElementById('hero-btn').onclick = () => loadAnime(hero.title);
+            document.getElementById('hero-btn-real').onclick = () => loadAnime(hero.title);
 
-            // Grid Setup
-            const grid = document.getElementById('trending-grid');
-            grid.innerHTML = data.map(a => `
+            document.getElementById('trending-grid').innerHTML = data.map(a => `
                 <div class="anime-card" onclick="loadAnime('${a.title.replace(/'/g, "\\'")}')">
                     <img src="${a.images.jpg.image_url}">
-                    <div class="title">${a.title}</div>
-                    <div style="font-size: 0.7rem; color: var(--muted)">${a.type} • ${a.episodes || '?'} Eps</div>
+                    <div style="margin-top:10px; font-weight:600; font-size:0.9rem">${a.title}</div>
                 </div>
             `).join('');
+            
+            updateHistory();
         };
 
-        // --- SEARCH ---
-        const searchInput = document.getElementById('search-bar');
-        const searchResults = document.getElementById('search-results');
-
-        searchInput.addEventListener('input', () => {
-            clearTimeout(window.searchTimer);
-            const q = searchInput.value.trim();
-            if (q.length < 3) { searchResults.style.display = "none"; return; }
-
-            window.searchTimer = setTimeout(async () => {
-                const res = await fetch(`${API}/search?q=${q}`);
-                const data = await res.json();
-                
-                searchResults.innerHTML = data.map(a => `
-                    <div class="search-item" onclick="loadAnime('${(a.title.english || a.title.romaji).replace(/'/g, "\\'")}')">
-                        <img src="${a.coverImage.large}">
-                        <div style="padding: 10px">
-                            <div style="font-size: 0.9rem">${a.title.english || a.title.romaji}</div>
-                            <div style="font-size: 0.7rem; color: var(--muted)">${a.seasonYear || ''}</div>
-                        </div>
-                    </div>
-                `).join('');
-                searchResults.style.display = "block";
-            }, 300);
-        });
-
-        // --- ANIME LOADING ---
-        async function loadAnime(title) {
-            searchResults.style.display = "none";
-            
+        async function loadAnime(title, ep = 1) {
+            document.getElementById('search-results').style.display = 'none';
             try {
                 const [metaRes, imdbRes] = await Promise.all([
                     fetch(`${API}/anime-info?title=${encodeURIComponent(title)}`),
                     fetch(`${API}/imdb?title=${encodeURIComponent(title)}`)
                 ]);
-
                 const meta = await metaRes.json();
                 const im = await imdbRes.json();
 
-                if (!im.imdb) { alert("Source not found!"); return; }
-
                 state.imdb = im.imdb;
                 state.title = title;
-                state.totalEps = meta.totalEpisodes || meta.episodes || 12;
-                state.currentEp = 1;
-                state.currentSeason = 1;
+                state.totalEps = meta.totalEpisodes || 12;
 
-                document.getElementById('player-modal').style.display = "flex";
+                document.getElementById('player-modal').style.display = 'flex';
                 renderEpisodes();
-                playStream(1);
-            } catch (e) { alert("Server Error"); }
+                playStream(ep);
+            } catch(e) { alert("Source not found"); }
         }
 
-        // --- EPISODE THUMBNAILS ---
-        function renderEpisodes() {
-            const list = document.getElementById('ep-list');
-            list.innerHTML = "";
+        async function playStream(ep) {
+            state.currentEp = ep;
+            document.getElementById('playing-title').innerText = `${state.title} - EP ${ep}`;
+            const res = await fetch(`${API}/stream?imdb=${state.imdb}&ep=${ep}`);
+            const data = await res.json();
+            document.getElementById('main-frame').src = data.primary || data.backup;
             
+            saveHistory(state.title, ep);
+            renderEpisodes();
+        }
+
+        function renderEpisodes() {
+            const container = document.getElementById('ep-list');
+            container.innerHTML = "";
             for (let i = 1; i <= state.totalEps; i++) {
                 const card = document.createElement('div');
                 card.className = `ep-thumb-card ${i === state.currentEp ? 'active' : ''}`;
-                // Using a placeholder image for thumbnails as most free APIs don't provide unique ones per ep
-                card.innerHTML = `
-                    <img src="https://placehold.co/120x68/1f1f1f/white?text=EP+${i}">
-                    <div>
-                        <div style="font-size: 0.85rem; font-weight: 600;">Episode ${i}</div>
-                        <div style="font-size: 0.7rem; color: var(--muted)">Duration: 24m</div>
-                    </div>
-                `;
+                card.innerHTML = `<img src="https://placehold.co/100x56/1f2129/white?text=EP+${i}"><div><b>EP ${i}</b></div>`;
                 card.onclick = () => playStream(i);
-                list.appendChild(card);
+                container.appendChild(card);
             }
         }
 
-        // --- STREAMING & SERVERS ---
-        async function playStream(ep) {
-            state.currentEp = ep;
-            document.getElementById('now-playing-title').innerText = state.title;
-            document.getElementById('now-playing-ep').innerText = `Season ${state.currentSeason} • Episode ${ep}`;
-            
-            const frame = document.getElementById('main-frame');
-            frame.src = "about:blank"; // Loader effect
-
-            try {
-                const res = await fetch(`${API}/stream?imdb=${state.imdb}&season=${state.currentSeason}&ep=${ep}`);
-                const data = await res.json();
-                state.data = data;
-                
-                frame.src = data[state.server] || data.primary || data.backup;
-                
-                // Update active EP in list
-                document.querySelectorAll('.ep-thumb-card').forEach((c, idx) => {
-                    c.classList.toggle('active', (idx + 1) === ep);
-                });
-            } catch (e) { alert("Stream Error"); }
+        function saveHistory(title, ep) {
+            let h = JSON.parse(localStorage.getItem('k_hist') || '[]');
+            h = h.filter(x => x.title !== title);
+            h.unshift({ title, ep });
+            localStorage.setItem('k_hist', JSON.stringify(h.slice(0, 5)));
+            updateHistory();
         }
 
-        function switchServer(type) {
-            state.server = type;
-            document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            if (state.data) {
-                document.getElementById('main-frame').src = state.data[type];
-            }
-        }
-
-        function changeSeason() {
-            state.currentSeason = document.getElementById('season-select').value;
-            playStream(1);
+        function updateHistory() {
+            const list = document.getElementById('history-list');
+            const h = JSON.parse(localStorage.getItem('k_hist') || '[]');
+            list.innerHTML = h.map(x => `<div class="nav-item" onclick="loadAnime('${x.title}', ${x.ep})"><i class="fa fa-play-circle"></i><span>${x.title}</span></div>`).join('');
         }
 
         function closePlayer() {
-            document.getElementById('player-modal').style.display = "none";
-            document.getElementById('main-frame').src = "";
+            document.getElementById('player-modal').style.display = 'none';
+            document.getElementById('main-frame').src = '';
         }
+
+        // Search logic
+        document.getElementById('search-bar').addEventListener('input', async (e) => {
+            const q = e.target.value;
+            if (q.length < 3) return;
+            const res = await fetch(`${API}/search?q=${q}`);
+            const data = await res.json();
+            const results = document.getElementById('search-results');
+            results.innerHTML = data.map(a => `<div onclick="loadAnime('${a.title.english || a.title.romaji}')" style="padding:12px; display:flex; gap:10px; cursor:pointer; border-bottom:1px solid var(--glass)"><img src="${a.coverImage.large}" width="30"><span>${a.title.english || a.title.romaji}</span></div>`).join('');
+            results.style.display = 'block';
+        });
     </script>
 </body>
 </html>
