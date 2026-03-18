@@ -21,21 +21,23 @@ header {
   position:sticky;
   top:0;
   background:#0b1220;
+  z-index:10;
 }
 
 input {
   flex:1;
-  padding:10px;
+  padding:12px;
   border-radius:10px;
   border:none;
 }
 
 button {
-  padding:10px;
+  padding:10px 15px;
   background:#8b5cf6;
   border:none;
   color:white;
   border-radius:10px;
+  cursor:pointer;
 }
 
 /* GRID */
@@ -53,9 +55,7 @@ button {
   cursor:pointer;
   transition:.2s;
 }
-.card:hover {
-  transform:scale(1.05);
-}
+.card:hover { transform:scale(1.05); }
 
 .card img {
   width:100%;
@@ -69,12 +69,31 @@ button {
   background:#000;
   display:none;
   flex-direction:column;
+  z-index:100;
 }
 
 iframe {
   width:100%;
   height:50%;
   border:none;
+}
+
+/* TOP BAR PLAYER */
+.player-top {
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+}
+
+.close-btn {
+  background:red;
+}
+
+/* CONTROLS */
+.controls {
+  display:flex;
+  gap:10px;
+  padding:10px;
 }
 
 /* EPISODES */
@@ -84,6 +103,7 @@ iframe {
   gap:8px;
   padding:10px;
   overflow:auto;
+  height:50%;
 }
 
 .ep {
@@ -95,6 +115,12 @@ iframe {
 }
 .ep.active {
   background:#8b5cf6;
+}
+
+/* LOADER */
+.loader {
+  text-align:center;
+  padding:20px;
 }
 </style>
 </head>
@@ -108,9 +134,23 @@ iframe {
 
 <div id="results"></div>
 
+<!-- PLAYER -->
 <div id="playerBox">
+
+  <div class="player-top">
+    <button class="close-btn" onclick="closePlayer()">✕</button>
+    <div>Episode <span id="epNum">1</span></div>
+  </div>
+
   <iframe id="iframe"></iframe>
+
+  <div class="controls">
+    <button onclick="prevEp()">⏮ Prev</button>
+    <button onclick="nextEp()">⏭ Next</button>
+  </div>
+
   <div id="episodes"></div>
+
 </div>
 
 <script>
@@ -118,16 +158,18 @@ const API = "https://kogemi-api-3.onrender.com";
 
 let currentImdb = null;
 let currentEp = 1;
-let totalEps = 24;
+let totalEps = 50;
 
 /* 🔍 SEARCH */
 async function search() {
   const q = document.getElementById("searchInput").value;
 
+  const container = document.getElementById("results");
+  container.innerHTML = "<div class='loader'>Loading...</div>";
+
   const res = await fetch(`${API}/search?q=${q}`);
   const data = await res.json();
 
-  const container = document.getElementById("results");
   container.innerHTML = "";
 
   data.forEach(anime => {
@@ -147,22 +189,27 @@ async function search() {
   });
 }
 
-/* 🎬 SELECT */
+/* 🎬 SELECT ANIME */
 async function selectAnime(title) {
   const clean = title.split(":")[0];
+
+  alert("Loading " + clean);
 
   const res = await fetch(`${API}/imdb?title=${encodeURIComponent(clean)}`);
   const data = await res.json();
 
   if (!data.imdb) {
-    alert("No stream");
+    alert("No stream found");
     return;
   }
 
   currentImdb = data.imdb;
 
-  // guess episodes (simple fix)
-  totalEps = 24;
+  // smarter episode guess
+  if (clean.toLowerCase().includes("one piece")) totalEps = 1100;
+  else if (clean.toLowerCase().includes("naruto")) totalEps = 220;
+  else if (clean.toLowerCase().includes("bleach")) totalEps = 366;
+  else totalEps = 50;
 
   buildEpisodes();
   playEpisode(1);
@@ -174,6 +221,8 @@ async function selectAnime(title) {
 async function playEpisode(ep) {
   currentEp = ep;
 
+  document.getElementById("epNum").innerText = ep;
+
   const res = await fetch(`${API}/stream?imdb=${currentImdb}&ep=${ep}`);
   const data = await res.json();
 
@@ -183,7 +232,27 @@ async function playEpisode(ep) {
   highlightEp();
 }
 
-/* 📺 EPISODES */
+/* ⏭ NEXT */
+function nextEp() {
+  if (currentEp < totalEps) {
+    playEpisode(currentEp + 1);
+  }
+}
+
+/* ⏮ PREV */
+function prevEp() {
+  if (currentEp > 1) {
+    playEpisode(currentEp - 1);
+  }
+}
+
+/* ❌ CLOSE */
+function closePlayer() {
+  document.getElementById("playerBox").style.display = "none";
+  document.getElementById("iframe").src = "";
+}
+
+/* EP LIST */
 function buildEpisodes() {
   const container = document.getElementById("episodes");
   container.innerHTML = "";
@@ -199,25 +268,21 @@ function buildEpisodes() {
   }
 }
 
-/* ACTIVE EP */
+/* ACTIVE */
 function highlightEp() {
   document.querySelectorAll(".ep").forEach(e => e.classList.remove("active"));
   const el = document.querySelectorAll(".ep")[currentEp - 1];
   if (el) el.classList.add("active");
 }
 
-/* 🔥 AUTOPLAY NEXT */
+/* 🔥 AUTOPLAY */
 setInterval(() => {
   const iframe = document.getElementById("iframe");
 
-  try {
-    if (iframe.src && iframe.src.includes("ended")) {
-      if (currentEp < totalEps) {
-        playEpisode(currentEp + 1);
-      }
-    }
-  } catch {}
-}, 5000);
+  if (iframe.src && iframe.src.includes("ended")) {
+    nextEp();
+  }
+}, 4000);
 
 </script>
 
