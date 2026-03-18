@@ -145,6 +145,11 @@ iframe {
   <iframe id="iframe"></iframe>
 
   <div class="controls">
+    <select id="server">
+      <option value="primary">Primary</option>
+      <option value="backup">Backup</option>
+    </select>
+
     <button onclick="prevEp()">⏮ Prev</button>
     <button onclick="nextEp()">⏭ Next</button>
   </div>
@@ -158,7 +163,7 @@ const API = "https://kogemi-api-3.onrender.com";
 
 let currentImdb = null;
 let currentEp = 1;
-let totalEps = 50;
+let totalEps = 12;
 
 /* 🔍 SEARCH */
 async function search() {
@@ -193,28 +198,48 @@ async function search() {
 async function selectAnime(title) {
   const clean = title.split(":")[0];
 
-  alert("Loading " + clean);
+  document.getElementById("results").innerHTML = "<div class='loader'>Loading...</div>";
 
-  const res = await fetch(`${API}/imdb?title=${encodeURIComponent(clean)}`);
-  const data = await res.json();
+  try {
+    const [metaRes, imdbRes] = await Promise.all([
+      fetch(`${API}/anime-info?title=${encodeURIComponent(clean)}`),
+      fetch(`${API}/imdb?title=${encodeURIComponent(clean)}`)
+    ]);
 
-  if (!data.imdb) {
-    alert("No stream found");
-    return;
+    const meta = await metaRes.json();
+    const imdbData = await imdbRes.json();
+
+    if (!imdbData.imdb) {
+      alert("No stream found");
+      return;
+    }
+
+    currentImdb = imdbData.imdb;
+
+    /* 🔥 FINAL EPISODE FIX */
+    totalEps =
+      meta.totalEpisodes ||
+      (Array.isArray(meta.episodes) ? meta.episodes.length : meta.episodes);
+
+    // fallback for long anime (Jikan issue)
+    if (!totalEps || totalEps < 15) {
+      const t = clean.toLowerCase();
+
+      if (t.includes("one piece")) totalEps = 1100;
+      else if (t.includes("naruto shippuden")) totalEps = 500;
+      else if (t.includes("naruto")) totalEps = 220;
+      else if (t.includes("bleach")) totalEps = 366;
+      else totalEps = 24;
+    }
+
+    buildEpisodes();
+    playEpisode(1);
+
+    document.getElementById("playerBox").style.display = "flex";
+
+  } catch (e) {
+    alert("Server error");
   }
-
-  currentImdb = data.imdb;
-
-  // smarter episode guess
-  if (clean.toLowerCase().includes("one piece")) totalEps = 1100;
-  else if (clean.toLowerCase().includes("naruto")) totalEps = 220;
-  else if (clean.toLowerCase().includes("bleach")) totalEps = 366;
-  else totalEps = 50;
-
-  buildEpisodes();
-  playEpisode(1);
-
-  document.getElementById("playerBox").style.display = "flex";
 }
 
 /* ▶ PLAY */
@@ -223,27 +248,25 @@ async function playEpisode(ep) {
 
   document.getElementById("epNum").innerText = ep;
 
+  const server = document.getElementById("server").value;
+
   const res = await fetch(`${API}/stream?imdb=${currentImdb}&ep=${ep}`);
   const data = await res.json();
 
   document.getElementById("iframe").src =
-    data.url || data.backup;
+    server === "primary" ? data.primary : data.backup;
 
   highlightEp();
 }
 
 /* ⏭ NEXT */
 function nextEp() {
-  if (currentEp < totalEps) {
-    playEpisode(currentEp + 1);
-  }
+  if (currentEp < totalEps) playEpisode(currentEp + 1);
 }
 
 /* ⏮ PREV */
 function prevEp() {
-  if (currentEp > 1) {
-    playEpisode(currentEp - 1);
-  }
+  if (currentEp > 1) playEpisode(currentEp - 1);
 }
 
 /* ❌ CLOSE */
@@ -261,9 +284,7 @@ function buildEpisodes() {
     const btn = document.createElement("div");
     btn.className = "ep";
     btn.innerText = i;
-
     btn.onclick = () => playEpisode(i);
-
     container.appendChild(btn);
   }
 }
@@ -271,18 +292,17 @@ function buildEpisodes() {
 /* ACTIVE */
 function highlightEp() {
   document.querySelectorAll(".ep").forEach(e => e.classList.remove("active"));
-  const el = document.querySelectorAll(".ep")[currentEp - 1];
-  if (el) el.classList.add("active");
+  document.querySelectorAll(".ep")[currentEp - 1]?.classList.add("active");
 }
 
 /* 🔥 AUTOPLAY */
 setInterval(() => {
   const iframe = document.getElementById("iframe");
 
-  if (iframe.src && iframe.src.includes("ended")) {
+  if (iframe.src && iframe.src.includes("autoNext")) {
     nextEp();
   }
-}, 4000);
+}, 5000);
 
 </script>
 
