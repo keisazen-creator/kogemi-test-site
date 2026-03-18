@@ -13,10 +13,14 @@ body {
   color:white;
 }
 
+/* NAV */
 header {
   padding:15px;
   display:flex;
   gap:10px;
+  position:sticky;
+  top:0;
+  background:#0b1220;
 }
 
 input {
@@ -34,6 +38,7 @@ button {
   border-radius:10px;
 }
 
+/* GRID */
 #results {
   display:grid;
   grid-template-columns:repeat(2,1fr);
@@ -46,6 +51,10 @@ button {
   padding:10px;
   border-radius:10px;
   cursor:pointer;
+  transition:.2s;
+}
+.card:hover {
+  transform:scale(1.05);
 }
 
 .card img {
@@ -53,20 +62,39 @@ button {
   border-radius:10px;
 }
 
-#player {
+/* PLAYER */
+#playerBox {
   position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  height:40%;
-  background:black;
+  inset:0;
+  background:#000;
   display:none;
+  flex-direction:column;
 }
 
 iframe {
   width:100%;
-  height:100%;
+  height:50%;
   border:none;
+}
+
+/* EPISODES */
+#episodes {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(60px,1fr));
+  gap:8px;
+  padding:10px;
+  overflow:auto;
+}
+
+.ep {
+  background:#1f2937;
+  padding:10px;
+  text-align:center;
+  border-radius:8px;
+  cursor:pointer;
+}
+.ep.active {
+  background:#8b5cf6;
 }
 </style>
 </head>
@@ -80,16 +108,17 @@ iframe {
 
 <div id="results"></div>
 
-<div id="player">
+<div id="playerBox">
   <iframe id="iframe"></iframe>
+  <div id="episodes"></div>
 </div>
 
 <script>
-
-/* 🔥 ONLY THIS LINE MATTERS */
-const API = "https://kogemi-api-3.onrender.com"; // <-- YOUR BACKEND
+const API = "https://kogemi-api-3.onrender.com";
 
 let currentImdb = null;
+let currentEp = 1;
+let totalEps = 24;
 
 /* 🔍 SEARCH */
 async function search() {
@@ -118,31 +147,77 @@ async function search() {
   });
 }
 
-/* 🎬 GET IMDB */
+/* 🎬 SELECT */
 async function selectAnime(title) {
-  const res = await fetch(`${API}/imdb?title=${encodeURIComponent(title)}`);
+  const clean = title.split(":")[0];
+
+  const res = await fetch(`${API}/imdb?title=${encodeURIComponent(clean)}`);
   const data = await res.json();
 
   if (!data.imdb) {
-    alert("No stream found");
+    alert("No stream");
     return;
   }
 
   currentImdb = data.imdb;
 
+  // guess episodes (simple fix)
+  totalEps = 24;
+
+  buildEpisodes();
   playEpisode(1);
+
+  document.getElementById("playerBox").style.display = "flex";
 }
 
 /* ▶ PLAY */
 async function playEpisode(ep) {
+  currentEp = ep;
+
   const res = await fetch(`${API}/stream?imdb=${currentImdb}&ep=${ep}`);
   const data = await res.json();
 
   document.getElementById("iframe").src =
     data.url || data.backup;
 
-  document.getElementById("player").style.display = "block";
+  highlightEp();
 }
+
+/* 📺 EPISODES */
+function buildEpisodes() {
+  const container = document.getElementById("episodes");
+  container.innerHTML = "";
+
+  for (let i = 1; i <= totalEps; i++) {
+    const btn = document.createElement("div");
+    btn.className = "ep";
+    btn.innerText = i;
+
+    btn.onclick = () => playEpisode(i);
+
+    container.appendChild(btn);
+  }
+}
+
+/* ACTIVE EP */
+function highlightEp() {
+  document.querySelectorAll(".ep").forEach(e => e.classList.remove("active"));
+  const el = document.querySelectorAll(".ep")[currentEp - 1];
+  if (el) el.classList.add("active");
+}
+
+/* 🔥 AUTOPLAY NEXT */
+setInterval(() => {
+  const iframe = document.getElementById("iframe");
+
+  try {
+    if (iframe.src && iframe.src.includes("ended")) {
+      if (currentEp < totalEps) {
+        playEpisode(currentEp + 1);
+      }
+    }
+  } catch {}
+}, 5000);
 
 </script>
 
