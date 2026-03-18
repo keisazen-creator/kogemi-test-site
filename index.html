@@ -1,208 +1,471 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kogemi</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kogemi | Stream Your Favorite Anime</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b1220;
+            --surface: #161d2f;
+            --accent: #8b5cf6;
+            --text: #ffffff;
+            --text-muted: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-<style>
-body{margin:0;font-family:system-ui;background:#0b1220;color:white}
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-/* NAV */
-nav{display:flex;justify-content:space-between;padding:15px;background:#0b1220;position:sticky;top:0}
-.logo{font-weight:bold;color:#8b5cf6}
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
 
-/* HERO */
-#hero{height:60vh;background-size:cover;display:flex;align-items:flex-end;padding:20px}
-.hero-title{font-size:28px;font-weight:bold}
+        /* --- UI COMPONENTS --- */
 
-/* ROW */
-.section{padding:15px}
-.row{display:flex;gap:10px;overflow:auto}
-.card{min-width:120px;cursor:pointer}
-.card img{width:100%;border-radius:10px}
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-/* PLAYER */
-#player{position:fixed;inset:0;background:black;display:none;flex-direction:column}
-iframe{width:100%;height:50%}
+        /* Header */
+        header {
+            position: fixed;
+            top: 0; width: 100%; z-index: 1000;
+            padding: 1rem 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: var(--transition);
+        }
 
-/* CONTROLS */
-.controls{display:flex;gap:10px;padding:10px}
-select{padding:10px;background:#1f2937;color:white;border:none;border-radius:8px}
+        header.scrolled { background: var(--bg); padding: 0.7rem 5%; border-bottom: 1px solid var(--glass); }
 
-/* EPISODES */
-#episodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;padding:10px;overflow:auto}
-.ep{background:#1f2937;padding:10px;text-align:center;border-radius:8px;cursor:pointer}
-.ep.active{background:#8b5cf6}
+        .logo { font-size: 1.8rem; font-weight: 800; color: var(--accent); letter-spacing: -1px; cursor: pointer; }
 
-/* SEARCH */
-#searchBox{display:none;padding:10px}
-input{width:100%;padding:12px;border-radius:10px;border:none}
-</style>
+        .search-container {
+            position: relative; width: 40%; max-width: 400px;
+        }
+
+        .search-input {
+            width: 100%; padding: 0.6rem 1rem; border-radius: 20px;
+            background: var(--surface); border: 1px solid var(--glass);
+            color: white; outline: none; transition: var(--transition);
+        }
+
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3); }
+
+        /* Hero */
+        #hero {
+            height: 70vh; width: 100%; position: relative;
+            display: flex; align-items: flex-end; padding: 0 5% 4rem;
+            background-size: cover; background-position: center;
+        }
+
+        #hero::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(to top, var(--bg) 10%, transparent 50%, rgba(11, 18, 32, 0.6) 100%);
+        }
+
+        .hero-content { position: relative; z-index: 2; max-width: 600px; }
+        .hero-title { font-size: 3.5rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.1; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .btn-primary {
+            background: var(--accent); color: white; border: none;
+            padding: 0.8rem 2rem; border-radius: 8px; font-weight: 600;
+            cursor: pointer; transition: var(--transition); font-size: 1rem;
+        }
+        .btn-primary:hover { transform: scale(1.05); filter: brightness(1.1); }
+
+        /* Rows & Cards */
+        .section-title { padding: 2rem 5% 1rem; font-size: 1.4rem; font-weight: 600; }
+
+        .row {
+            display: flex; overflow-x: auto; padding: 0 5% 2rem; gap: 1.2rem;
+            scroll-behavior: smooth; scrollbar-width: none;
+        }
+        .row::-webkit-scrollbar { display: none; }
+
+        .card {
+            flex: 0 0 180px; position: relative; cursor: pointer;
+            transition: var(--transition); border-radius: 12px; overflow: hidden;
+        }
+        .card:hover { transform: translateY(-8px); z-index: 10; }
+        .card img { width: 100%; height: 260px; object-fit: cover; border-radius: 12px; }
+        .card-info {
+            position: absolute; bottom: 0; width: 100%; padding: 2rem 0.5rem 0.5rem;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+        }
+        .card-title { font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Details Overlay */
+        #details-overlay, #player-overlay {
+            position: fixed; inset: 0; background: var(--bg); z-index: 2000;
+            display: none; overflow-y: auto; opacity: 0; transition: opacity 0.3s ease;
+        }
+
+        .details-header {
+            height: 40vh; position: relative; background-size: cover; background-position: center;
+        }
+        .close-btn {
+            position: fixed; top: 20px; right: 20px; width: 40px; height: 40px;
+            border-radius: 50%; background: var(--surface); display: flex;
+            align-items: center; justify-content: center; cursor: pointer; z-index: 2100;
+        }
+
+        .details-body { padding: 2rem 5%; max-width: 1000px; margin: -50px auto 0; position: relative; }
+        .episodes-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px; margin-top: 2rem;
+        }
+        .ep-btn {
+            padding: 10px; background: var(--surface); border: 1px solid var(--glass);
+            border-radius: 6px; color: white; cursor: pointer; text-align: center; transition: 0.2s;
+        }
+        .ep-btn.active { background: var(--accent); border-color: var(--accent); }
+        .ep-btn:hover { background: var(--glass); }
+
+        /* Player */
+        #player-container {
+            width: 100%; aspect-ratio: 16/9; background: #000; position: relative;
+        }
+        iframe { width: 100%; height: 100%; border: none; }
+        
+        .player-controls {
+            padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center;
+            background: var(--surface);
+        }
+
+        /* Search Results Overlay */
+        #search-results {
+            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 600px; background: var(--surface);
+            border-radius: 12px; z-index: 1001; display: none; padding: 1rem;
+            max-height: 70vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .search-item {
+            display: flex; gap: 15px; padding: 10px; cursor: pointer; border-radius: 8px;
+        }
+        .search-item:hover { background: var(--glass); }
+        .search-item img { width: 50px; height: 70px; object-fit: cover; border-radius: 4px; }
+
+        /* Loader */
+        .loader {
+            width: 40px; height: 40px; border: 4px solid var(--glass);
+            border-top: 4px solid var(--accent); border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 2rem auto;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.2rem; }
+            .search-container { width: 60%; }
+            .row { gap: 0.8rem; }
+            .card { flex: 0 0 140px; }
+            .card img { height: 200px; }
+        }
+    </style>
 </head>
-
 <body>
 
-<nav>
-<div class="logo">Kogemi</div>
-<button onclick="toggleSearch()">🔍</button>
-</nav>
+    <header id="main-header">
+        <div class="logo" onclick="location.reload()">KOGEMI</div>
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search anime..." id="searchBox">
+            <div id="search-results" class="glass"></div>
+        </div>
+    </header>
 
-<div id="searchBox">
-<input id="searchInput" placeholder="Search..." onkeyup="search()">
-</div>
+    <main>
+        <section id="hero"></section>
 
-<div id="hero">
-<div class="hero-title" id="heroTitle">Loading...</div>
-</div>
+        <h2 class="section-title">Continue Watching</h2>
+        <div class="row" id="continue-watching"></div>
 
-<div class="section">
-<h3>🔥 Trending</h3>
-<div class="row" id="row"></div>
-</div>
+        <h2 class="section-title">Trending Now</h2>
+        <div class="row" id="trending-row"></div>
 
-<div id="player">
-<div class="controls">
-<button onclick="closePlayer()">✕</button>
-<select id="seasonSelect" onchange="changeSeason()"></select>
-<button onclick="prevEp()">⏮</button>
-<button onclick="nextEp()">⏭</button>
-</div>
+        <h2 class="section-title">Top Rated</h2>
+        <div class="row" id="top-rated-row"></div>
+    </main>
 
-<iframe id="iframe"></iframe>
-<div id="episodes"></div>
-</div>
+    <div id="details-overlay">
+        <div class="close-btn" onclick="closeOverlay('details-overlay')">✕</div>
+        <div class="details-header" id="details-banner"></div>
+        <div class="details-body">
+            <h1 id="details-title" style="font-size: 2.5rem; font-weight: 800;"></h1>
+            <p id="details-meta" style="color: var(--text-muted); margin-bottom: 1.5rem;"></p>
+            <button class="btn-primary" id="start-watch-btn">WATCH EPISODE 1</button>
+            <h3 style="margin-top: 2.5rem;">Episodes</h3>
+            <div class="episodes-grid" id="episodes-grid"></div>
+        </div>
+    </div>
 
-<script>
-const API="https://kogemi-api-3.onrender.com";
-const JIKAN="https://api.jikan.moe/v4";
+    <div id="player-overlay">
+        <div class="close-btn" onclick="closeOverlay('player-overlay')">✕</div>
+        <div id="player-container"></div>
+        <div class="player-controls">
+            <div id="player-info">
+                <h4 id="player-anime-title"></h4>
+                <p id="player-ep-text" style="color: var(--text-muted); font-size: 0.9rem;"></p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="ep-btn" onclick="changeEpisode(-1)">Prev</button>
+                <button class="ep-btn" onclick="changeEpisode(1)">Next</button>
+            </div>
+        </div>
+        <div id="player-error" style="display:none; padding: 2rem; text-align: center; color: #ff4444;">
+            Stream unavailable. Try another episode or refresh.
+        </div>
+    </div>
 
-let imdb=null,tmdb=null,season=1,currentEp=1,totalEps=12;
+    <script>
+        const API_BASE = "https://kogemi-api-3.onrender.com";
+        const JIKAN_API = "https://api.jikan.moe/v4";
+        
+        let currentAnime = null;
+        let currentImdbId = null;
+        let currentEp = 1;
+        let totalEps = 0;
 
-/* LOAD HOME */
-window.onload=async()=>{
-const res=await fetch(`${JIKAN}/top/anime`);
-const data=await res.json();
+        // --- CORE INITIALIZATION ---
 
-loadHero(data.data[0]);
-buildRow(data.data.slice(0,10));
-};
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('main-header');
+            header.classList.toggle('scrolled', window.scrollY > 50);
+        });
 
-/* HERO */
-function loadHero(a){
-document.getElementById("hero").style.backgroundImage=`url(${a.images.jpg.large_image_url})`;
-document.getElementById("heroTitle").innerText=a.title;
-}
+        async function init() {
+            loadHero();
+            loadTrending();
+            loadTopRated();
+            loadContinueWatching();
+        }
 
-/* ROW */
-function buildRow(list){
-const row=document.getElementById("row");
-row.innerHTML="";
-list.forEach(a=>{
-const div=document.createElement("div");
-div.className="card";
-div.innerHTML=`<img src="${a.images.jpg.image_url}"><p>${a.title}</p>`;
-div.onclick=()=>selectAnime(a.title);
-row.appendChild(div);
-});
-}
+        // --- DATA FETCHING ---
 
-/* SEARCH */
-function toggleSearch(){
-const box=document.getElementById("searchBox");
-box.style.display=box.style.display==="block"?"none":"block";
-}
+        async function loadHero() {
+            const res = await fetch(`${JIKAN_API}/seasons/now?limit=1`);
+            const data = await res.json();
+            const anime = data.data[0];
+            const hero = document.getElementById('hero');
+            hero.style.backgroundImage = `url(${anime.trailer.images.maximum_image_url || anime.images.jpg.large_image_url})`;
+            hero.innerHTML = `
+                <div class="hero-content">
+                    <h1 class="hero-title">${anime.title}</h1>
+                    <button class="btn-primary" onclick="openDetails('${anime.title}', '${anime.images.jpg.large_image_url}')">Watch Now</button>
+                </div>
+            `;
+        }
 
-async function search(){
-const q=document.getElementById("searchInput").value;
-if(!q)return;
+        async function loadTrending() {
+            const res = await fetch(`${JIKAN_API}/top/anime?filter=airing&limit=15`);
+            const data = await res.json();
+            renderRow(data.data, 'trending-row');
+        }
 
-const res=await fetch(`${API}/search?q=${q}`);
-const data=await res.json();
+        async function loadTopRated() {
+            const res = await fetch(`${JIKAN_API}/top/anime?limit=15`);
+            const data = await res.json();
+            renderRow(data.data, 'top-rated-row');
+        }
 
-buildRow(data.map(a=>({
-title:a.title.romaji,
-images:{jpg:{image_url:a.coverImage.large}}
-})));
-}
+        function renderRow(items, elementId) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = items.map(anime => `
+                <div class="card" onclick="openDetails('${anime.title.replace(/'/g, "\\'")}', '${anime.images.jpg.large_image_url}')">
+                    <img loading="lazy" src="${anime.images.jpg.large_image_url}" alt="${anime.title}">
+                    <div class="card-info">
+                        <div class="card-title">${anime.title}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-/* SELECT */
-async function selectAnime(title){
-const clean=title.split(":")[0];
+        // --- SEARCH SYSTEM ---
 
-const epRes=await fetch(`${API}/anime-info?title=${encodeURIComponent(clean)}`);
-const epData=await epRes.json();
-totalEps=epData.episodes||12;
+        let searchTimeout;
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            if (query.length < 3) {
+                document.getElementById('search-results').style.display = 'none';
+                return;
+            }
+            searchTimeout = setTimeout(() => performSearch(query), 500);
+        });
 
-const res=await fetch(`${API}/imdb?title=${encodeURIComponent(clean)}`);
-const data=await res.json();
+        async function performSearch(query) {
+            const resultsBox = document.getElementById('search-results');
+            resultsBox.innerHTML = '<div class="loader"></div>';
+            resultsBox.style.display = 'block';
 
-if(!data.imdb){alert("No stream");return;}
+            try {
+                const res = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                
+                if(!data || data.length === 0) {
+                    resultsBox.innerHTML = '<div style="padding: 1rem">No results found.</div>';
+                    return;
+                }
 
-imdb=data.imdb;
-tmdb=data.tmdb;
+                resultsBox.innerHTML = data.map(item => `
+                    <div class="search-item" onclick="openDetails('${item.title.replace(/'/g, "\\'")}', '${item.image}')">
+                        <img src="${item.image}">
+                        <div>
+                            <div style="font-weight:600">${item.title}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted)">Anime</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                resultsBox.innerHTML = '<div style="padding: 1rem">Error searching.</div>';
+            }
+        }
 
-buildSeasons(1);
-buildEpisodes();
-playEpisode(1);
+        // --- ANIME DETAILS & EPISODES ---
 
-document.getElementById("player").style.display="flex";
-}
+        async function openDetails(title, image) {
+            currentAnime = title;
+            document.getElementById('search-results').style.display = 'none';
+            document.getElementById('searchBox').value = '';
 
-/* SEASONS */
-function buildSeasons(n){
-const s=document.getElementById("seasonSelect");
-s.innerHTML="";
-for(let i=1;i<=n;i++){
-const o=document.createElement("option");
-o.value=i;o.text="Season "+i;
-s.appendChild(o);
-}
-}
+            const overlay = document.getElementById('details-overlay');
+            overlay.style.display = 'block';
+            setTimeout(() => overlay.style.opacity = '1', 10);
 
-function changeSeason(){
-season=document.getElementById("seasonSelect").value;
-playEpisode(1);
-}
+            document.getElementById('details-banner').style.backgroundImage = `url(${image})`;
+            document.getElementById('details-title').innerText = title;
+            document.getElementById('episodes-grid').innerHTML = '<div class="loader"></div>';
 
-/* PLAY */
-async function playEpisode(ep){
-currentEp=ep;
+            try {
+                // Get real info
+                const [infoRes, idRes] = await Promise.all([
+                    fetch(`${API_BASE}/anime-info?title=${encodeURIComponent(title)}`),
+                    fetch(`${API_BASE}/imdb?title=${encodeURIComponent(title)}`)
+                ]);
 
-const res=await fetch(`${API}/stream?imdb=${imdb}&season=${season}&ep=${ep}`);
-const data=await res.json();
+                const info = await infoRes.json();
+                const ids = await idRes.json();
+                
+                totalEps = info.episodes || 12;
+                currentImdbId = ids.imdb;
 
-document.getElementById("iframe").src=data.primary||data.backup;
+                document.getElementById('details-meta').innerText = `${totalEps} Episodes • IMDB: ${ids.imdb || 'N/A'}`;
+                
+                renderEpisodes(totalEps);
+                document.getElementById('start-watch-btn').onclick = () => playEpisode(1);
 
-highlight();
-}
+            } catch (err) {
+                document.getElementById('episodes-grid').innerHTML = 'Failed to load anime info.';
+            }
+        }
 
-/* EP */
-function buildEpisodes(){
-const box=document.getElementById("episodes");
-box.innerHTML="";
-for(let i=1;i<=totalEps;i++){
-const d=document.createElement("div");
-d.className="ep";
-d.innerText=i;
-d.onclick=()=>playEpisode(i);
-box.appendChild(d);
-}
-}
+        function renderEpisodes(count) {
+            const grid = document.getElementById('episodes-grid');
+            let html = '';
+            for (let i = 1; i <= count; i++) {
+                html += `<button class="ep-btn" onclick="playEpisode(${i})">${i}</button>`;
+            }
+            grid.innerHTML = html;
+        }
 
-function highlight(){
-document.querySelectorAll(".ep").forEach(e=>e.classList.remove("active"));
-document.querySelectorAll(".ep")[currentEp-1]?.classList.add("active");
-}
+        // --- VIDEO PLAYER LOGIC ---
 
-/* NAV */
-function nextEp(){if(currentEp<totalEps)playEpisode(currentEp+1);}
-function prevEp(){if(currentEp>1)playEpisode(currentEp-1);}
-function closePlayer(){
-document.getElementById("player").style.display="none";
-document.getElementById("iframe").src="";
-}
-</script>
+        async function playEpisode(epNumber) {
+            currentEp = epNumber;
+            const playerOverlay = document.getElementById('player-overlay');
+            const container = document.getElementById('player-container');
+            
+            playerOverlay.style.display = 'block';
+            setTimeout(() => playerOverlay.style.opacity = '1', 10);
+            
+            document.getElementById('player-anime-title').innerText = currentAnime;
+            document.getElementById('player-ep-text').innerText = `Episode ${epNumber}`;
+            container.innerHTML = '<div class="loader"></div>';
 
+            try {
+                const res = await fetch(`${API_BASE}/stream?imdb=${currentImdbId}&season=1&ep=${epNumber}`);
+                const data = await res.json();
+
+                if (data.primary) {
+                    container.innerHTML = `<iframe src="${data.primary}" allowfullscreen></iframe>`;
+                    saveProgress();
+                } else {
+                    throw new Error("No stream");
+                }
+            } catch (err) {
+                container.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
+                    <p>Failed to load stream.</p>
+                    <button class="btn-primary" style="margin-top:10px" onclick="playEpisode(${epNumber})">Retry</button>
+                </div>`;
+            }
+        }
+
+        function changeEpisode(delta) {
+            const next = currentEp + delta;
+            if (next > 0 && next <= totalEps) {
+                playEpisode(next);
+            }
+        }
+
+        // --- PERSISTENCE ---
+
+        function saveProgress() {
+            let history = JSON.parse(localStorage.getItem('kogemi_history') || '[]');
+            // Remove if exists
+            history = history.filter(item => item.title !== currentAnime);
+            // Add to top
+            history.unshift({
+                title: currentAnime,
+                ep: currentEp,
+                imdb: currentImdbId,
+                image: document.getElementById('details-banner').style.backgroundImage.slice(5, -2)
+            });
+            localStorage.setItem('kogemi_history', JSON.stringify(history.slice(0, 10)));
+            loadContinueWatching();
+        }
+
+        function loadContinueWatching() {
+            const history = JSON.parse(localStorage.getItem('kogemi_history') || '[]');
+            const container = document.getElementById('continue-watching');
+            
+            if (history.length === 0) {
+                container.parentElement.style.display = 'none';
+                return;
+            }
+            
+            container.parentElement.style.display = 'block';
+            container.innerHTML = history.map(item => `
+                <div class="card" onclick="openDetails('${item.title.replace(/'/g, "\\'")}', '${item.image}')">
+                    <img src="${item.image}">
+                    <div class="card-info">
+                        <div class="card-title">${item.title}</div>
+                        <div style="font-size:0.7rem; color:var(--accent)">Resume Ep ${item.ep}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- UTILS ---
+
+        function closeOverlay(id) {
+            const el = document.getElementById(id);
+            el.style.opacity = '0';
+            setTimeout(() => {
+                el.style.display = 'none';
+                if (id === 'player-overlay') document.getElementById('player-container').innerHTML = '';
+            }, 300);
+        }
+
+        // Init
+        init();
+
+    </script>
 </body>
 </html>
