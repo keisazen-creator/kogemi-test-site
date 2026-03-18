@@ -1,252 +1,471 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Kogemi</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kogemi - One Piece</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --primary-color: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --surface: rgba(255, 255, 255, 0.05);
+            --surface-border: rgba(255, 255, 255, 0.1);
+        }
 
-<style>
-body{
-margin:0;
-font-family:system-ui;
-background:#0b1220;
-color:white;
-}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
 
-/* NAV */
-.nav{
-display:flex;
-justify-content:space-between;
-padding:12px;
-background:linear-gradient(to right,#0b1220,#1f2937);
-position:sticky;
-top:0;
-z-index:10;
-}
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
 
-.logo{
-background:#7c3aed;
-padding:10px;
-border-radius:10px;
-}
+        /* --- HEADER --- */
+        .header {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(11,15,25,0.8), transparent);
+        }
 
-/* HERO */
-.hero{
-position:relative;
-height:60vh;
-overflow:hidden;
-}
+        .header-left, .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-.hero img{
-width:100%;
-height:100%;
-object-fit:cover;
-filter:brightness(0.5);
-}
+        .logo {
+            background: var(--primary-color);
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 18px;
+        }
 
-.hero-content{
-position:absolute;
-bottom:20px;
-left:20px;
-}
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
 
-.hero-title{
-font-size:28px;
-font-weight:bold;
-margin-bottom:10px;
-}
+        .profile-btn {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--primary-color);
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
 
-.btn{
-padding:12px 18px;
-border-radius:12px;
-border:none;
-margin-right:10px;
-cursor:pointer;
-}
+        /* --- HERO SECTION --- */
+        .hero {
+            position: relative;
+            height: 80vh;
+            min-height: 500px;
+            background: url('https://wallpaperaccess.com/full/1119442.jpg') center/cover no-repeat;
+            display: flex;
+            align-items: flex-end;
+            padding-bottom: 20px;
+        }
 
-.btn-play{
-background:#7c3aed;
-color:white;
-}
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, var(--bg-color) 0%, rgba(11,15,25,0.8) 30%, transparent 100%);
+        }
 
-.btn-list{
-background:#1f2937;
-color:white;
-}
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            padding: 0 20px;
+        }
 
-/* TRENDING */
-.section{
-padding:12px;
-}
+        /* Carousel Navigation Arrows Mockup */
+        .hero-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: absolute;
+            width: calc(100% - 40px);
+            top: 30%;
+            pointer-events: none;
+        }
 
-.row{
-display:flex;
-overflow-x:auto;
-gap:12px;
-}
+        .nav-arrow {
+            background: rgba(0,0,0,0.5);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            cursor: pointer;
+        }
 
-.card{
-min-width:140px;
-background:#1f2937;
-border-radius:14px;
-overflow:hidden;
-cursor:pointer;
-}
+        /* Meta Data */
+        .meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
 
-.card img{
-width:100%;
-height:200px;
-object-fit:cover;
-}
+        .rating {
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
 
-.card-title{
-padding:6px;
-font-size:13px;
-}
+        /* Title */
+        .title {
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        }
 
-/* PLAYER */
-.watch{
-display:none;
-padding:10px;
-}
+        /* Genres */
+        .genres {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
 
-iframe{
-width:100%;
-aspect-ratio:16/9;
-border:none;
-border-radius:12px;
-}
+        .genre {
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            color: #c4b5fd;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(139, 92, 246, 0.05);
+        }
 
-.back{
-margin:10px 0;
-cursor:pointer;
-color:#aaa;
-}
-</style>
+        .description {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            flex: 1; /* Takes up remaining space */
+        }
+
+        .btn-primary:active {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: white;
+            border: 1px solid var(--surface-border);
+            padding: 14px 25px;
+        }
+
+        .btn-icon {
+            background: transparent;
+            color: white;
+            border: 1px solid var(--surface-border);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            padding: 0;
+            font-size: 18px;
+        }
+
+        /* --- PLAYER & EPISODES --- */
+        .content-section {
+            padding: 20px;
+        }
+
+        .player-container {
+            display: none;
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        iframe {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            height: auto;
+            border-radius: 16px;
+            border: 1px solid var(--surface-border);
+            background: black;
+        }
+
+        /* ARCS */
+        .arcs {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            padding-bottom: 15px;
+            scrollbar-width: none; /* Firefox */
+        }
+        
+        .arcs::-webkit-scrollbar {
+            display: none; /* Chrome */
+        }
+
+        .arc {
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            padding: 10px 20px;
+            border-radius: 20px;
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .arc.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* EPISODES */
+        .episodes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .episodes::-webkit-scrollbar { width: 5px; }
+        .episodes::-webkit-scrollbar-thumb { background: var(--surface-border); border-radius: 5px; }
+
+        .ep {
+            background: var(--surface);
+            border: 1px solid transparent;
+            padding: 12px 0;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .ep:hover, .ep.playing {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+    </style>
 </head>
-
 <body>
 
-<!-- NAV -->
-<div class="nav">
-<div class="logo">K</div>
-<div>🔍 👤 ☰</div>
-</div>
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">O</div>
+            <div class="icon-btn" style="font-size: 18px; font-weight: 600; display:none;">Kogemi</div> 
+        </div>
+        <div class="header-right">
+            <button class="icon-btn">🔍</button>
+            <div class="profile-btn">👤</div>
+            <button class="icon-btn">☰</button>
+        </div>
+    </header>
 
-<!-- HERO -->
-<div id="hero" class="hero">
-<img id="heroImg">
-<div class="hero-content">
-<div id="heroTitle" class="hero-title"></div>
-<button class="btn btn-play" onclick="playHero()">▶ Watch Now</button>
-</div>
-</div>
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        
+        <div class="hero-content">
+            <div class="hero-nav">
+                <div class="nav-arrow">❮</div>
+                <div class="nav-arrow">❯</div>
+            </div>
 
-<!-- TRENDING -->
-<div id="home">
+            <div class="meta">
+                <div class="rating">⭐ 8.8</div>
+                <span>1999</span>
+                <span>1155 eps</span>
+                <span>24 min</span>
+            </div>
 
-<div class="section">
-🔥 Trending Now
-<div class="row" id="trending"></div>
-</div>
+            <h1 class="title">ONE PIECE</h1>
 
-</div>
+            <div class="genres">
+                <span class="genre">Action</span>
+                <span class="genre">Adventure</span>
+                <span class="genre">Fantasy</span>
+            </div>
 
-<!-- WATCH -->
-<div id="watch" class="watch">
-<div class="back" onclick="goHome()">← Back</div>
-<iframe id="player"></iframe>
-</div>
+            <p class="description">Follow the adventures of Monkey D. Luffy and his pirate crew in order to find the greatest treasure ever left by the legendary Pirate, Gold Roger.</p>
 
-<script>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="showPlayer()">
+                    <span>▶</span> Watch Now
+                </button>
+                <button class="btn btn-secondary">
+                    <span>+</span> My List
+                </button>
+                <button class="btn btn-icon">
+                    ℹ
+                </button>
+            </div>
+        </div>
+    </section>
 
-const API = "https://kogemi-api-3.onrender.com";
+    <section class="content-section" id="streaming-area">
+        <div class="player-container" id="playerBox">
+            <iframe id="player" src="" allowfullscreen></iframe>
+        </div>
 
-let currentAnime = "";
+        <div class="arcs" id="arcList"></div>
 
-/* LOAD TRENDING */
-async function loadTrending(){
+        <div class="episodes" id="episodes"></div>
+    </section>
 
-let res = await fetch(`${API}/search?q=anime`);
-let data = await res.json();
+    <script>
+        /* SHOW PLAYER AND SCROLL TO IT */
+        function showPlayer(){
+            const playerBox = document.getElementById("playerBox");
+            playerBox.style.display = "block";
+            
+            // Auto scroll down to the player smoothly
+            document.getElementById("streaming-area").scrollIntoView({ behavior: 'smooth' });
+            
+            // Play episode 1 if iframe is empty
+            if(!document.getElementById("player").src) {
+                playEpisode(1, null);
+            }
+        }
 
-let list = data.slice(0,10);
+        /* PLAY EPISODE */
+        function playEpisode(num, event){
+            document.getElementById("player").src = `https://vidfast.pro/tv/tt0388629/1/${num}?autoPlay=true`;
+            
+            // Highlight active episode
+            document.querySelectorAll(".ep").forEach(e => e.classList.remove("playing"));
+            if(event) {
+                event.target.classList.add("playing");
+            } else {
+                // If called without event (like on Watch Now), highlight first ep
+                const firstEp = document.querySelector(".ep");
+                if(firstEp) firstEp.classList.add("playing");
+            }
+        }
 
-/* HERO */
-let hero = list[0];
-heroImg.src = hero.coverImage.large;
-heroTitle.innerText = hero.title.romaji;
-currentAnime = hero.title.romaji;
+        /* ARCS DATA */
+        const arcs = [
+            {name:"East Blue", start:1, end:61},
+            {name:"Alabasta", start:62, end:135},
+            {name:"Skypiea", start:136, end:206},
+            {name:"Water 7", start:207, end:325},
+            {name:"Marineford", start:326, end:516},
+            {name:"Dressrosa", start:517, end:746},
+            {name:"Wano", start:747, end:1155}
+        ];
 
-/* TRENDING ROW */
-trending.innerHTML="";
+        /* LOAD ARCS */
+        const arcContainer = document.getElementById("arcList");
 
-list.forEach(anime=>{
+        arcs.forEach((arc, index)=>{
+            let btn = document.createElement("div");
+            btn.className = "arc";
+            btn.innerText = arc.name;
 
-let card = document.createElement("div");
-card.className="card";
+            btn.onclick = ()=>{
+                document.querySelectorAll(".arc").forEach(a=>a.classList.remove("active"));
+                btn.classList.add("active");
+                loadEpisodes(arc.start, arc.end);
+            };
 
-card.innerHTML = `
-<img src="${anime.coverImage.large}">
-<div class="card-title">${anime.title.romaji}</div>
-`;
+            // Select first arc by default
+            if(index === 0){
+                btn.classList.add("active");
+                loadEpisodes(arc.start, arc.end);
+            }
 
-card.onclick = ()=>openAnime(anime.title.romaji);
+            arcContainer.appendChild(btn);
+        });
 
-trending.appendChild(card);
+        /* LOAD EPISODES */
+        function loadEpisodes(start, end){
+            const container = document.getElementById("episodes");
+            container.innerHTML = "";
 
-});
+            for(let i=start; i<=end; i++){
+                let ep = document.createElement("div");
+                ep.className = "ep";
+                ep.innerText = i;
 
-}
+                ep.onclick = (e) => playEpisode(i, e);
 
-/* HERO PLAY */
-function playHero(){
-openAnime(currentAnime);
-}
-
-/* OPEN */
-async function openAnime(title){
-
-let res = await fetch(`${API}/imdb?title=${title}`);
-let data = await res.json();
-
-if(!data.imdb){
-alert("No stream");
-return;
-}
-
-home.style.display="none";
-watch.style.display="block";
-
-playEpisode(data.imdb,1);
-
-}
-
-/* PLAY */
-async function playEpisode(imdb,ep){
-
-let res = await fetch(`${API}/stream?imdb=${imdb}&ep=${ep}`);
-let data = await res.json();
-
-if(!data.url){
-alert("No stream");
-return;
-}
-
-player.src = data.url;
-
-}
-
-/* BACK */
-function goHome(){
-watch.style.display="none";
-home.style.display="block";
-player.src="";
-}
-
-/* INIT */
-loadTrending();
-
-</script>
-
+                container.appendChild(ep);
+            }
+        }
+    </script>
 </body>
 </html>
