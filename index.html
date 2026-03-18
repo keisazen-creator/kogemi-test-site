@@ -1,310 +1,463 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kogemi Final Boss</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kogemi Pro | HiAnime Edition</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0e0e0e;
+            --sidebar: #141414;
+            --surface: #1f1f1f;
+            --accent: #ffb100; /* HiAnime Yellow */
+            --accent-rgb: 255, 177, 0;
+            --text: #ffffff;
+            --muted: #aaaaaa;
+            --glass: rgba(255, 255, 255, 0.05);
+            --sidebar-width: 260px;
+        }
 
-<style>
-:root{
-  --bg:#0b1220;
-  --surface:#161d2f;
-  --accent:#8b5cf6;
-  --text:#fff;
-  --muted:#94a3b8;
-}
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:system-ui;
-  display:flex;
-}
+        /* --- SIDEBAR --- */
+        #sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--glass);
+            transition: 0.3s;
+            z-index: 1001;
+        }
 
-/* SIDEBAR */
-.sidebar{
-  width:200px;
-  background:#111827;
-  padding:20px;
-  height:100vh;
-  position:fixed;
-}
+        .side-logo {
+            padding: 30px;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
 
-.sidebar h2{
-  color:var(--accent);
-}
+        .nav-links { flex-grow: 1; padding: 0 15px; }
+        .nav-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--muted);
+            transition: 0.2s;
+        }
+        .nav-item:hover, .nav-item.active { background: var(--surface); color: var(--text); }
+        .nav-item.active i { color: var(--accent); }
 
-.sidebar button{
-  width:100%;
-  margin-top:10px;
-  padding:10px;
-  background:#1f2937;
-  border:none;
-  color:white;
-  cursor:pointer;
-}
+        /* --- MAIN CONTENT --- */
+        #main-view {
+            flex-grow: 1;
+            overflow-y: auto;
+            position: relative;
+            scroll-behavior: smooth;
+        }
 
-/* MAIN */
-.main{
-  margin-left:200px;
-  width:100%;
-}
+        header {
+            position: sticky; top: 0;
+            padding: 15px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(14, 14, 14, 0.8);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+        }
 
-/* NAV */
-header{
-  padding:15px;
-  display:flex;
-  justify-content:space-between;
-}
+        .search-container { position: relative; width: 400px; }
+        .search-bar {
+            width: 100%;
+            background: var(--surface);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            color: white;
+            outline: 2px solid transparent;
+            transition: 0.3s;
+        }
+        .search-bar:focus { outline-color: var(--accent); }
 
-input{
-  padding:10px;
-  border-radius:20px;
-  border:none;
-  width:300px;
-  background:var(--surface);
-  color:white;
-}
+        #search-results {
+            position: absolute; top: 120%; left: 0; width: 100%;
+            background: var(--surface); border-radius: 12px;
+            overflow: hidden; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
 
-/* HERO */
-#hero{
-  height:60vh;
-  display:flex;
-  align-items:end;
-  padding:20px;
-  background-size:cover;
-}
+        /* --- FILTERS --- */
+        .filter-row { padding: 20px 40px; display: flex; gap: 10px; overflow-x: auto; }
+        .filter-btn {
+            padding: 8px 18px;
+            background: var(--surface);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .filter-btn.active { background: var(--accent); color: black; font-weight: 600; }
 
-/* ROW */
-.row{
-  display:flex;
-  gap:10px;
-  overflow:auto;
-  padding:10px;
-}
+        /* --- HERO --- */
+        #hero {
+            height: 500px;
+            margin: 20px 40px;
+            border-radius: 20px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            padding: 60px;
+            overflow: hidden;
+        }
+        #hero::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(to top, var(--bg), transparent);
+        }
 
-.card{
-  min-width:140px;
-  cursor:pointer;
-}
-.card img{
-  width:100%;
-  border-radius:10px;
-}
+        /* --- CARDS --- */
+        .shelf { padding: 20px 40px; }
+        .shelf-title { font-size: 1.4rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .shelf-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); 
+            gap: 20px; 
+        }
+        .anime-card { cursor: pointer; transition: 0.3s; }
+        .anime-card:hover { transform: translateY(-10px); }
+        .anime-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 12px; }
+        .anime-card .title { font-size: 0.9rem; margin-top: 10px; font-weight: 600; }
 
-/* PLAYER */
-#player{
-  position:fixed;
-  inset:0;
-  background:black;
-  display:none;
-  flex-direction:column;
-  z-index:999;
-}
+        /* --- FULL SCREEN PLAYER --- */
+        #player-modal {
+            position: fixed; inset: 0;
+            background: var(--bg);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+        }
 
-iframe{
-  width:100%;
-  height:60%;
-}
+        .player-top {
+            padding: 20px 40px;
+            display: flex; justify-content: space-between;
+            background: var(--sidebar);
+        }
 
-/* CONTROLS */
-.controls{
-  display:flex;
-  gap:10px;
-  padding:10px;
-}
+        .player-body {
+            display: flex;
+            height: calc(100vh - 80px);
+        }
 
-select,button{
-  padding:8px;
-  background:#1f2937;
-  color:white;
-  border:none;
-}
+        .video-side { flex-grow: 1; background: #000; position: relative; }
+        #main-frame { width: 100%; height: 100%; border: none; }
 
-/* EP GRID */
-#episodes{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(60px,1fr));
-  gap:6px;
-  padding:10px;
-}
+        .controls-side {
+            width: 400px;
+            background: var(--sidebar);
+            border-left: 1px solid var(--glass);
+            display: flex;
+            flex-direction: column;
+        }
 
-.ep{
-  background:#222;
-  padding:8px;
-  text-align:center;
-  cursor:pointer;
-}
+        .selector-box { padding: 20px; border-bottom: 1px solid var(--glass); }
+        select {
+            width: 100%;
+            padding: 12px;
+            background: var(--surface);
+            color: white;
+            border: 1px solid var(--glass);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
 
-.ep.active{
-  background:var(--accent);
-}
-</style>
+        .ep-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .ep-thumb-card {
+            display: flex;
+            gap: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: 0.2s;
+        }
+        .ep-thumb-card:hover { background: var(--surface); }
+        .ep-thumb-card.active { background: rgba(255, 177, 0, 0.1); border: 1px solid var(--accent); }
+        .ep-thumb-card img { width: 120px; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; }
+        
+        .server-list {
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+            background: var(--surface);
+        }
+        .server-btn {
+            padding: 8px 15px;
+            background: var(--bg);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .server-btn.active { background: var(--accent); color: black; font-weight: bold; }
+
+        @media (max-width: 1000px) {
+            #sidebar { display: none; }
+            .player-body { flex-direction: column; }
+            .controls-side { width: 100%; height: 400px; }
+            .video-side { height: 300px; flex-grow: 0; }
+        }
+    </style>
 </head>
-
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <h2>KOGEMI</h2>
-  <button onclick="location.reload()">🏠 Home</button>
-  <button>🔥 Trending</button>
-  <button>🎭 Genres</button>
-</div>
+    <aside id="sidebar">
+        <div class="side-logo">KOGEMI</div>
+        <nav class="nav-links">
+            <div class="nav-item active"><i class="fa fa-home"></i> Home</div>
+            <div class="nav-item"><i class="fa fa-fire"></i> Trending</div>
+            <div class="nav-item"><i class="fa fa-star"></i> Top Rated</div>
+            <div class="nav-item"><i class="fa fa-clock"></i> Recently Added</div>
+        </nav>
+    </aside>
 
-<!-- MAIN -->
-<div class="main">
+    <main id="main-view">
+        <header>
+            <div class="search-container">
+                <input type="text" class="search-bar" id="search-bar" placeholder="Type name to search...">
+                <div id="search-results"></div>
+            </div>
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <i class="fa fa-bell" style="color: var(--muted)"></i>
+                <div style="width: 35px; height: 35px; background: var(--accent); border-radius: 50%;"></div>
+            </div>
+        </header>
 
-<header>
-  <input id="search" placeholder="Search anime...">
-</header>
+        <section id="hero">
+            <div style="z-index: 2">
+                <h1 id="hero-title" style="font-size: 3rem; margin-bottom: 20px;"></h1>
+                <button class="filter-btn active" id="hero-btn" style="padding: 15px 30px;">WATCH NOW</button>
+            </div>
+        </section>
 
-<div id="hero"></div>
+        <div class="filter-row">
+            <div class="filter-btn active">All</div>
+            <div class="filter-btn">Action</div>
+            <div class="filter-btn">Adventure</div>
+            <div class="filter-btn">Fantasy</div>
+            <div class="filter-btn">Sci-Fi</div>
+            <div class="filter-btn">Isekai</div>
+        </div>
 
-<h3 style="padding:10px">Trending</h3>
-<div class="row" id="row"></div>
+        <div class="shelf">
+            <div class="shelf-title"><i class="fa fa-bolt" style="color: var(--accent)"></i> Trending Now</div>
+            <div class="shelf-grid" id="trending-grid"></div>
+        </div>
+    </main>
 
-</div>
+    <div id="player-modal">
+        <div class="player-top">
+            <div id="player-meta">
+                <h2 id="now-playing-title">Anime Title</h2>
+                <span id="now-playing-ep" style="color: var(--accent)">Episode 1</span>
+            </div>
+            <button class="filter-btn" onclick="closePlayer()">CLOSE ✕</button>
+        </div>
 
-<!-- PLAYER -->
-<div id="player">
-  <button onclick="closePlayer()">❌ Close</button>
+        <div class="player-body">
+            <div class="video-side">
+                <iframe id="main-frame" allowfullscreen scrolling="no"></iframe>
+            </div>
 
-  <iframe id="frame"></iframe>
+            <div class="controls-side">
+                <div class="selector-box">
+                    <label style="font-size: 0.8rem; color: var(--muted)">SEASON</label>
+                    <select id="season-select" onchange="changeSeason()">
+                        <option value="1">Season 1</option>
+                        <option value="2">Season 2</option>
+                        <option value="3">Season 3</option>
+                    </select>
+                </div>
 
-  <div class="controls">
-    <!-- SERVER SWITCH -->
-    <select id="server" onchange="play(currentEp)">
-      <option value="primary">Primary</option>
-      <option value="backup">Backup</option>
-    </select>
+                <div class="server-list" id="server-list">
+                    <div class="server-btn active" onclick="switchServer('primary')">Server 1</div>
+                    <div class="server-btn" onclick="switchServer('backup')">Server 2</div>
+                </div>
 
-    <!-- SEASON -->
-    <select id="season" onchange="play(currentEp)">
-      <option value="1">Season 1</option>
-    </select>
+                <div class="ep-list" id="ep-list">
+                    </div>
+            </div>
+        </div>
+    </div>
 
-    <button onclick="prev()">⏮</button>
-    <button onclick="next()">⏭</button>
-  </div>
+    <script>
+        const API = "https://kogemi-api-3.onrender.com";
+        const JIKAN = "https://api.jikan.moe/v4";
 
-  <div id="episodes"></div>
-</div>
+        let state = {
+            imdb: null,
+            title: '',
+            currentEp: 1,
+            totalEps: 0,
+            currentSeason: 1,
+            server: 'primary',
+            data: null
+        };
 
-<script>
-const API="https://kogemi-api-3.onrender.com";
-const JIKAN="https://api.jikan.moe/v4";
+        // --- LOAD HOME ---
+        window.onload = async () => {
+            const res = await fetch(`${JIKAN}/top/anime?limit=20`);
+            const { data } = await res.json();
+            
+            // Hero Setup
+            const hero = data[0];
+            document.getElementById('hero').style.backgroundImage = `url(${hero.images.jpg.large_image_url})`;
+            document.getElementById('hero-title').innerText = hero.title;
+            document.getElementById('hero-btn').onclick = () => loadAnime(hero.title);
 
-let imdb=null;
-let currentEp=1;
-let totalEps=12;
+            // Grid Setup
+            const grid = document.getElementById('trending-grid');
+            grid.innerHTML = data.map(a => `
+                <div class="anime-card" onclick="loadAnime('${a.title.replace(/'/g, "\\'")}')">
+                    <img src="${a.images.jpg.image_url}">
+                    <div class="title">${a.title}</div>
+                    <div style="font-size: 0.7rem; color: var(--muted)">${a.type} • ${a.episodes || '?'} Eps</div>
+                </div>
+            `).join('');
+        };
 
-/* HOME */
-window.onload=async()=>{
-  const res=await fetch(`${JIKAN}/top/anime`);
-  const data=await res.json();
+        // --- SEARCH ---
+        const searchInput = document.getElementById('search-bar');
+        const searchResults = document.getElementById('search-results');
 
-  const hero=data.data[0];
-  document.getElementById("hero").style.backgroundImage=
-    `url(${hero.images.jpg.large_image_url})`;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(window.searchTimer);
+            const q = searchInput.value.trim();
+            if (q.length < 3) { searchResults.style.display = "none"; return; }
 
-  buildRow(data.data);
-};
+            window.searchTimer = setTimeout(async () => {
+                const res = await fetch(`${API}/search?q=${q}`);
+                const data = await res.json();
+                
+                searchResults.innerHTML = data.map(a => `
+                    <div class="search-item" onclick="loadAnime('${(a.title.english || a.title.romaji).replace(/'/g, "\\'")}')">
+                        <img src="${a.coverImage.large}">
+                        <div style="padding: 10px">
+                            <div style="font-size: 0.9rem">${a.title.english || a.title.romaji}</div>
+                            <div style="font-size: 0.7rem; color: var(--muted)">${a.seasonYear || ''}</div>
+                        </div>
+                    </div>
+                `).join('');
+                searchResults.style.display = "block";
+            }, 300);
+        });
 
-/* ROW */
-function buildRow(list){
-  const row=document.getElementById("row");
-  row.innerHTML="";
+        // --- ANIME LOADING ---
+        async function loadAnime(title) {
+            searchResults.style.display = "none";
+            
+            try {
+                const [metaRes, imdbRes] = await Promise.all([
+                    fetch(`${API}/anime-info?title=${encodeURIComponent(title)}`),
+                    fetch(`${API}/imdb?title=${encodeURIComponent(title)}`)
+                ]);
 
-  list.forEach(a=>{
-    const div=document.createElement("div");
-    div.className="card";
+                const meta = await metaRes.json();
+                const im = await imdbRes.json();
 
-    div.innerHTML=`
-      <img src="${a.images.jpg.image_url}">
-      <p>${a.title}</p>
-    `;
+                if (!im.imdb) { alert("Source not found!"); return; }
 
-    div.onclick=()=>loadAnime(a.title);
-    row.appendChild(div);
-  });
-}
+                state.imdb = im.imdb;
+                state.title = title;
+                state.totalEps = meta.totalEpisodes || meta.episodes || 12;
+                state.currentEp = 1;
+                state.currentSeason = 1;
 
-/* LOAD ANIME */
-async function loadAnime(title){
-  const [meta,im]=await Promise.all([
-    fetch(`${API}/anime-info?title=${encodeURIComponent(title)}`),
-    fetch(`${API}/imdb?title=${encodeURIComponent(title)}`)
-  ]);
+                document.getElementById('player-modal').style.display = "flex";
+                renderEpisodes();
+                playStream(1);
+            } catch (e) { alert("Server Error"); }
+        }
 
-  const m=await meta.json();
-  const i=await im.json();
+        // --- EPISODE THUMBNAILS ---
+        function renderEpisodes() {
+            const list = document.getElementById('ep-list');
+            list.innerHTML = "";
+            
+            for (let i = 1; i <= state.totalEps; i++) {
+                const card = document.createElement('div');
+                card.className = `ep-thumb-card ${i === state.currentEp ? 'active' : ''}`;
+                // Using a placeholder image for thumbnails as most free APIs don't provide unique ones per ep
+                card.innerHTML = `
+                    <img src="https://placehold.co/120x68/1f1f1f/white?text=EP+${i}">
+                    <div>
+                        <div style="font-size: 0.85rem; font-weight: 600;">Episode ${i}</div>
+                        <div style="font-size: 0.7rem; color: var(--muted)">Duration: 24m</div>
+                    </div>
+                `;
+                card.onclick = () => playStream(i);
+                list.appendChild(card);
+            }
+        }
 
-  imdb=i.imdb;
+        // --- STREAMING & SERVERS ---
+        async function playStream(ep) {
+            state.currentEp = ep;
+            document.getElementById('now-playing-title').innerText = state.title;
+            document.getElementById('now-playing-ep').innerText = `Season ${state.currentSeason} • Episode ${ep}`;
+            
+            const frame = document.getElementById('main-frame');
+            frame.src = "about:blank"; // Loader effect
 
-  totalEps =
-    m.totalEpisodes ||
-    (Array.isArray(m.episodes)?m.episodes.length:m.episodes) ||
-    12;
+            try {
+                const res = await fetch(`${API}/stream?imdb=${state.imdb}&season=${state.currentSeason}&ep=${ep}`);
+                const data = await res.json();
+                state.data = data;
+                
+                frame.src = data[state.server] || data.primary || data.backup;
+                
+                // Update active EP in list
+                document.querySelectorAll('.ep-thumb-card').forEach((c, idx) => {
+                    c.classList.toggle('active', (idx + 1) === ep);
+                });
+            } catch (e) { alert("Stream Error"); }
+        }
 
-  buildEpisodes();
-  play(1);
+        function switchServer(type) {
+            state.server = type;
+            document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            if (state.data) {
+                document.getElementById('main-frame').src = state.data[type];
+            }
+        }
 
-  document.getElementById("player").style.display="flex";
-}
+        function changeSeason() {
+            state.currentSeason = document.getElementById('season-select').value;
+            playStream(1);
+        }
 
-/* PLAY */
-async function play(ep){
-  currentEp=ep;
-
-  const server=document.getElementById("server").value;
-  const season=document.getElementById("season").value;
-
-  const res=await fetch(`${API}/stream?imdb=${imdb}&season=${season}&ep=${ep}`);
-  const data=await res.json();
-
-  document.getElementById("frame").src =
-    server==="primary"?data.primary:data.backup;
-
-  highlight();
-}
-
-/* EPISODES */
-function buildEpisodes(){
-  const box=document.getElementById("episodes");
-  box.innerHTML="";
-
-  for(let i=1;i<=totalEps;i++){
-    const d=document.createElement("div");
-    d.className="ep";
-    d.innerText=i;
-    d.onclick=()=>play(i);
-    box.appendChild(d);
-  }
-}
-
-/* NAV */
-function next(){
-  if(currentEp<totalEps) play(currentEp+1);
-}
-
-function prev(){
-  if(currentEp>1) play(currentEp-1);
-}
-
-/* ACTIVE */
-function highlight(){
-  document.querySelectorAll(".ep").forEach(e=>e.classList.remove("active"));
-  document.querySelectorAll(".ep")[currentEp-1]?.classList.add("active");
-}
-
-/* CLOSE */
-function closePlayer(){
-  document.getElementById("player").style.display="none";
-  document.getElementById("frame").src="";
-}
-</script>
-
+        function closePlayer() {
+            document.getElementById('player-modal').style.display = "none";
+            document.getElementById('main-frame').src = "";
+        }
+    </script>
 </body>
 </html>
