@@ -6,92 +6,126 @@
 <title>Kogemi</title>
 
 <style>
-body {
+body{
   margin:0;
-  font-family: Arial;
+  font-family:system-ui;
   background:#0b1220;
   color:white;
 }
 
 /* NAV */
-nav {
-  padding:15px;
+nav{
   display:flex;
   justify-content:space-between;
+  padding:15px;
+  position:sticky;
+  top:0;
+  background:#0b1220;
+  z-index:10;
+}
+
+.logo{
+  background:#8b5cf6;
+  width:35px;height:35px;
+  border-radius:10px;
+  display:flex;
   align-items:center;
-}
-.logo {
+  justify-content:center;
   font-weight:bold;
-  font-size:20px;
 }
-.search {
+
+/* HERO */
+#hero{
+  height:60vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:20px;
+  background-size:cover;
+  background-position:center;
+}
+
+.hero-title{
+  font-size:28px;
+  font-weight:bold;
+}
+
+.btn{
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  margin-top:10px;
+  cursor:pointer;
+}
+
+.btn-primary{
+  background:#8b5cf6;
+}
+
+/* ROW */
+.section{
+  padding:15px;
+}
+
+.row{
+  display:flex;
+  gap:10px;
+  overflow:auto;
+}
+
+.card{
+  min-width:120px;
+}
+
+.card img{
+  width:100%;
+  border-radius:10px;
+}
+
+/* SEARCH */
+#searchBox{
+  display:none;
   padding:10px;
+}
+
+input{
+  width:100%;
+  padding:12px;
   border-radius:10px;
   border:none;
 }
 
-/* HERO */
-.hero {
-  height:300px;
-  position:relative;
-  display:flex;
-  align-items:flex-end;
-  padding:20px;
-}
-.hero-bg {
-  position:absolute;
-  inset:0;
-  background-size:cover;
-  opacity:.4;
-}
-.hero h1 {
-  z-index:2;
-}
-
-/* ROWS */
-.section {
-  padding:10px;
-}
-.row {
-  display:flex;
-  gap:10px;
-  overflow-x:auto;
-}
-.card {
-  min-width:140px;
-  cursor:pointer;
-}
-.card img {
-  width:100%;
-  border-radius:10px;
-}
-
 /* PLAYER */
-#player {
+#player{
   position:fixed;
   inset:0;
-  background:black;
+  background:#000;
   display:none;
   flex-direction:column;
 }
-iframe {
+
+iframe{
   width:100%;
   height:50%;
 }
-#episodes {
+
+/* EPISODES */
+#episodes{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(60px,1fr));
   gap:8px;
   padding:10px;
+  overflow:auto;
 }
-.ep {
+
+.ep{
   background:#1f2937;
   padding:10px;
   text-align:center;
-  border-radius:6px;
+  border-radius:8px;
   cursor:pointer;
 }
-.ep.active {
+.ep.active{
   background:#8b5cf6;
 }
 </style>
@@ -100,153 +134,158 @@ iframe {
 <body>
 
 <nav>
-  <div class="logo">Kogemi</div>
-  <input class="search" placeholder="Search..." oninput="search(this.value)">
+  <div class="logo">K</div>
+  <button onclick="toggleSearch()">🔍</button>
 </nav>
 
+<div id="searchBox">
+  <input id="searchInput" placeholder="Search anime..." onkeyup="search()">
+</div>
+
 <!-- HERO -->
-<div class="hero">
-  <div class="hero-bg" id="heroBg"></div>
-  <h1 id="heroTitle">Loading...</h1>
+<div id="hero">
+  <div class="hero-title" id="heroTitle">Loading...</div>
+  <button class="btn btn-primary" onclick="openHero()">▶ Watch</button>
 </div>
 
-<!-- ROWS -->
+<!-- TRENDING -->
 <div class="section">
-  <h2>🔥 Trending</h2>
+  <h3>🔥 Trending</h3>
   <div class="row" id="trending"></div>
-</div>
-
-<div class="section">
-  <h2>⭐ Popular</h2>
-  <div class="row" id="popular"></div>
 </div>
 
 <!-- PLAYER -->
 <div id="player">
-  <button onclick="closePlayer()">❌ Close</button>
+  <button onclick="closePlayer()">✕</button>
   <iframe id="iframe"></iframe>
   <div id="episodes"></div>
 </div>
 
 <script>
 const API = "https://kogemi-api-3.onrender.com";
+const JIKAN = "https://api.jikan.moe/v4";
 
-let imdb = null;
-let currentEp = 1;
-let totalEps = 50;
+let currentImdb=null;
+let currentEp=1;
+let totalEps=12;
+let heroAnime=null;
 
 /* LOAD HOME */
-window.onload = async () => {
-  loadSection("naruto","trending");
-  loadSection("one piece","popular");
+window.onload=async()=>{
+  const res=await fetch(`${JIKAN}/top/anime`);
+  const data=await res.json();
+
+  heroAnime=data.data[0];
+  loadHero(heroAnime);
+
+  buildRow(data.data.slice(0,10));
 };
 
-/* LOAD ROW */
-async function loadSection(q,id){
-  const res = await fetch(`${API}/search?q=${q}`);
-  const data = await res.json();
+/* HERO */
+function loadHero(a){
+  document.getElementById("hero").style.backgroundImage=
+    `url(${a.images.jpg.large_image_url})`;
 
-  const container = document.getElementById(id);
-  container.innerHTML = "";
+  document.getElementById("heroTitle").innerText=
+    a.title;
+}
 
-  data.forEach((anime,i)=>{
-    const title = anime.title.romaji;
+function openHero(){
+  selectAnime(heroAnime.title);
+}
 
-    if(i===0){
-      document.getElementById("heroBg").style.backgroundImage =
-        `url(${anime.coverImage.large})`;
-      document.getElementById("heroTitle").innerText = title;
-    }
+/* ROW */
+function buildRow(list){
+  const row=document.getElementById("trending");
+  row.innerHTML="";
 
-    const div = document.createElement("div");
+  list.forEach(a=>{
+    const div=document.createElement("div");
     div.className="card";
 
-    div.innerHTML = `
-      <img src="${anime.coverImage.large}">
+    div.innerHTML=`
+      <img src="${a.images.jpg.image_url}">
+      <p>${a.title}</p>
     `;
 
-    div.onclick = ()=>openAnime(title);
+    div.onclick=()=>selectAnime(a.title);
 
-    container.appendChild(div);
+    row.appendChild(div);
   });
 }
 
 /* SEARCH */
-async function search(q){
-  if(!q) return;
-
-  const res = await fetch(`${API}/search?q=${q}`);
-  const data = await res.json();
-
-  const container = document.getElementById("trending");
-  container.innerHTML = "";
-
-  data.forEach(anime=>{
-    const title = anime.title.romaji;
-
-    const div = document.createElement("div");
-    div.className="card";
-    div.innerHTML=`<img src="${anime.coverImage.large}">`;
-
-    div.onclick = ()=>openAnime(title);
-
-    container.appendChild(div);
-  });
+function toggleSearch(){
+  const box=document.getElementById("searchBox");
+  box.style.display=box.style.display==="block"?"none":"block";
 }
 
-/* OPEN */
-async function openAnime(title){
-  const res = await fetch(`${API}/imdb?title=${encodeURIComponent(title)}`);
-  const data = await res.json();
+async function search(){
+  const q=document.getElementById("searchInput").value;
+  if(!q) return;
 
-  if(!data.imdb){
-    alert("No stream");
-    return;
-  }
+  const res=await fetch(`${API}/search?q=${q}`);
+  const data=await res.json();
 
-  imdb = data.imdb;
+  buildRow(data.map(a=>({
+    title:a.title.romaji,
+    images:{jpg:{image_url:a.coverImage.large}}
+  })));
+}
 
-  if(title.toLowerCase().includes("one piece")) totalEps=1100;
-  else totalEps=50;
+/* SELECT */
+async function selectAnime(title){
+  const clean=title.split(":")[0];
+
+  // EP COUNT
+  try{
+    const j=await fetch(`${JIKAN}/anime?q=${clean}&limit=1`);
+    const jd=await j.json();
+    totalEps=jd.data[0].episodes||12;
+  }catch{ totalEps=12; }
+
+  const res=await fetch(`${API}/imdb?title=${encodeURIComponent(clean)}`);
+  const data=await res.json();
+
+  if(!data.imdb){ alert("No stream"); return; }
+
+  currentImdb=data.imdb;
 
   buildEpisodes();
-  play(1);
+  playEpisode(1);
 
   document.getElementById("player").style.display="flex";
 }
 
 /* PLAY */
-async function play(ep){
-  currentEp = ep;
+async function playEpisode(ep){
+  currentEp=ep;
 
-  const res = await fetch(`${API}/stream?imdb=${imdb}&ep=${ep}`);
-  const data = await res.json();
+  const res=await fetch(`${API}/stream?imdb=${currentImdb}&ep=${ep}`);
+  const data=await res.json();
 
-  document.getElementById("iframe").src =
-    data.url || data.backup;
+  document.getElementById("iframe").src=data.url;
 
   highlight();
 }
 
-/* EPISODES */
+/* EP */
 function buildEpisodes(){
-  const container = document.getElementById("episodes");
-  container.innerHTML="";
+  const box=document.getElementById("episodes");
+  box.innerHTML="";
 
   for(let i=1;i<=totalEps;i++){
-    const btn=document.createElement("div");
-    btn.className="ep";
-    btn.innerText=i;
-    btn.onclick=()=>play(i);
-    container.appendChild(btn);
+    const d=document.createElement("div");
+    d.className="ep";
+    d.innerText=i;
+    d.onclick=()=>playEpisode(i);
+    box.appendChild(d);
   }
 }
 
-/* ACTIVE */
 function highlight(){
   document.querySelectorAll(".ep").forEach(e=>e.classList.remove("active"));
-  const el=document.querySelectorAll(".ep")[currentEp-1];
-  if(el) el.classList.add("active");
+  document.querySelectorAll(".ep")[currentEp-1]?.classList.add("active");
 }
 
 /* CLOSE */
