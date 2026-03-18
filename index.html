@@ -12,171 +12,176 @@ background:#0b1220;
 color:white;
 }
 
-/* HEADER */
-.header{
-padding:16px;
-text-align:center;
-background:#111827;
-font-size:20px;
-font-weight:bold;
-letter-spacing:1px;
+/* NAV */
+.nav{
+display:flex;
+justify-content:space-between;
+padding:12px;
+background:linear-gradient(to right,#0b1220,#1f2937);
+position:sticky;
+top:0;
+z-index:10;
 }
 
-/* SEARCH */
-.search{
+.logo{
+background:#7c3aed;
+padding:10px;
+border-radius:10px;
+}
+
+/* HERO */
+.hero{
+position:relative;
+height:60vh;
+overflow:hidden;
+}
+
+.hero img{
 width:100%;
-padding:14px;
+height:100%;
+object-fit:cover;
+filter:brightness(0.5);
+}
+
+.hero-content{
+position:absolute;
+bottom:20px;
+left:20px;
+}
+
+.hero-title{
+font-size:28px;
+font-weight:bold;
+margin-bottom:10px;
+}
+
+.btn{
+padding:12px 18px;
+border-radius:12px;
 border:none;
+margin-right:10px;
+cursor:pointer;
+}
+
+.btn-play{
+background:#7c3aed;
+color:white;
+}
+
+.btn-list{
 background:#1f2937;
 color:white;
-border-radius:12px;
-font-size:15px;
 }
 
-/* GRID */
-.grid{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:12px;
+/* TRENDING */
+.section{
 padding:12px;
 }
 
+.row{
+display:flex;
+overflow-x:auto;
+gap:12px;
+}
+
 .card{
+min-width:140px;
 background:#1f2937;
 border-radius:14px;
 overflow:hidden;
 cursor:pointer;
-transition:0.25s;
-}
-
-.card:hover{
-transform:scale(1.05);
 }
 
 .card img{
 width:100%;
-height:220px;
+height:200px;
 object-fit:cover;
 }
 
 .card-title{
-padding:10px;
-font-size:14px;
-}
-
-/* WATCH */
-.watch{
-display:none;
-padding:10px;
+padding:6px;
+font-size:13px;
 }
 
 /* PLAYER */
-.player-box{
-position:relative;
-border-radius:14px;
-overflow:hidden;
+.watch{
+display:none;
+padding:10px;
 }
 
 iframe{
 width:100%;
 aspect-ratio:16/9;
 border:none;
-}
-
-/* LOADER */
-.loader{
-position:absolute;
-inset:0;
-display:flex;
-align-items:center;
-justify-content:center;
-background:rgba(0,0,0,0.5);
-font-size:14px;
-}
-
-/* BACK */
-.back{
-padding:10px;
-cursor:pointer;
-color:#9ca3af;
-}
-
-/* EPISODES */
-.episodes{
-display:grid;
-grid-template-columns:repeat(5,1fr);
-gap:8px;
-margin-top:12px;
-}
-
-.ep{
-background:#1f2937;
-padding:12px;
 border-radius:12px;
-text-align:center;
+}
+
+.back{
+margin:10px 0;
 cursor:pointer;
-transition:0.2s;
-}
-
-.ep.active{
-background:#7c3aed;
-}
-
-.ep:hover{
-background:#7c3aed;
+color:#aaa;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">Kogemi</div>
-
-<!-- HOME -->
-<div id="home">
-
-<div style="padding:12px">
-<input class="search" placeholder="Search anime..." oninput="searchAnime(this.value)">
+<!-- NAV -->
+<div class="nav">
+<div class="logo">K</div>
+<div>🔍 👤 ☰</div>
 </div>
 
-<div class="grid" id="results"></div>
+<!-- HERO -->
+<div id="hero" class="hero">
+<img id="heroImg">
+<div class="hero-content">
+<div id="heroTitle" class="hero-title"></div>
+<button class="btn btn-play" onclick="playHero()">▶ Watch Now</button>
+</div>
+</div>
+
+<!-- TRENDING -->
+<div id="home">
+
+<div class="section">
+🔥 Trending Now
+<div class="row" id="trending"></div>
+</div>
 
 </div>
 
 <!-- WATCH -->
 <div id="watch" class="watch">
-
 <div class="back" onclick="goHome()">← Back</div>
-
-<div class="player-box">
-<div class="loader" id="loader">Loading...</div>
 <iframe id="player"></iframe>
-</div>
-
-<div class="episodes" id="episodes"></div>
-
 </div>
 
 <script>
 
 const API = "https://kogemi-api-3.onrender.com";
 
-/* SEARCH */
-async function searchAnime(q){
-if(!q){
-results.innerHTML="";
-return;
-}
-let res = await fetch(`${API}/search?q=${q}`);
-let data = await res.json();
-showResults(data);
-}
+let currentAnime = "";
 
-/* SHOW */
-function showResults(list){
-results.innerHTML="";
+/* LOAD TRENDING */
+async function loadTrending(){
+
+let res = await fetch(`${API}/search?q=anime`);
+let data = await res.json();
+
+let list = data.slice(0,10);
+
+/* HERO */
+let hero = list[0];
+heroImg.src = hero.coverImage.large;
+heroTitle.innerText = hero.title.romaji;
+currentAnime = hero.title.romaji;
+
+/* TRENDING ROW */
+trending.innerHTML="";
 
 list.forEach(anime=>{
+
 let card = document.createElement("div");
 card.className="card";
 
@@ -186,8 +191,16 @@ card.innerHTML = `
 `;
 
 card.onclick = ()=>openAnime(anime.title.romaji);
-results.appendChild(card);
+
+trending.appendChild(card);
+
 });
+
+}
+
+/* HERO PLAY */
+function playHero(){
+openAnime(currentAnime);
 }
 
 /* OPEN */
@@ -204,57 +217,22 @@ return;
 home.style.display="none";
 watch.style.display="block";
 
-/* smart episode count */
-let total = 24;
-if(title.toLowerCase().includes("one piece")) total = 1100;
-if(title.toLowerCase().includes("naruto")) total = 500;
-
-loadEpisodes(data.imdb, total);
-playEpisode(data.imdb, 1);
+playEpisode(data.imdb,1);
 
 }
 
 /* PLAY */
-async function playEpisode(imdb, ep){
-
-loader.style.display="flex";
-player.src="";
-
-/* highlight */
-document.querySelectorAll(".ep").forEach(e=>e.classList.remove("active"));
-if(document.querySelectorAll(".ep")[ep-1]){
-document.querySelectorAll(".ep")[ep-1].classList.add("active");
-}
+async function playEpisode(imdb,ep){
 
 let res = await fetch(`${API}/stream?imdb=${imdb}&ep=${ep}`);
 let data = await res.json();
 
 if(!data.url){
-loader.innerText="No stream 😢";
+alert("No stream");
 return;
 }
 
 player.src = data.url;
-
-/* hide loader */
-setTimeout(()=>loader.style.display="none",1000);
-
-}
-
-/* EPISODES */
-function loadEpisodes(imdb,total){
-
-episodes.innerHTML="";
-
-for(let i=1;i<=total;i++){
-let el = document.createElement("div");
-el.className="ep";
-el.innerText=i;
-
-el.onclick=()=>playEpisode(imdb,i);
-
-episodes.appendChild(el);
-}
 
 }
 
@@ -264,6 +242,9 @@ watch.style.display="none";
 home.style.display="block";
 player.src="";
 }
+
+/* INIT */
+loadTrending();
 
 </script>
 
