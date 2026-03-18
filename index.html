@@ -7,58 +7,60 @@
 <style>
 body{
 margin:0;
-font-family:Arial;
+font-family:system-ui;
 background:#0b1220;
 color:white;
 }
 
 /* HEADER */
 .header{
-padding:15px;
+padding:16px;
 text-align:center;
 background:#111827;
-font-size:18px;
+font-size:20px;
 font-weight:bold;
+letter-spacing:1px;
 }
 
 /* SEARCH */
 .search{
 width:100%;
-padding:12px;
+padding:14px;
 border:none;
 background:#1f2937;
 color:white;
-border-radius:10px;
+border-radius:12px;
+font-size:15px;
 }
 
 /* GRID */
 .grid{
 display:grid;
 grid-template-columns:repeat(2,1fr);
-gap:10px;
-padding:10px;
+gap:12px;
+padding:12px;
 }
 
 .card{
 background:#1f2937;
-border-radius:12px;
+border-radius:14px;
 overflow:hidden;
 cursor:pointer;
-transition:0.2s;
+transition:0.25s;
 }
 
 .card:hover{
-transform:scale(1.03);
+transform:scale(1.05);
 }
 
 .card img{
 width:100%;
-height:200px;
+height:220px;
 object-fit:cover;
 }
 
 .card-title{
-padding:8px;
+padding:10px;
 font-size:14px;
 }
 
@@ -68,11 +70,28 @@ display:none;
 padding:10px;
 }
 
+/* PLAYER */
+.player-box{
+position:relative;
+border-radius:14px;
+overflow:hidden;
+}
+
 iframe{
 width:100%;
 aspect-ratio:16/9;
 border:none;
-border-radius:12px;
+}
+
+/* LOADER */
+.loader{
+position:absolute;
+inset:0;
+display:flex;
+align-items:center;
+justify-content:center;
+background:rgba(0,0,0,0.5);
+font-size:14px;
 }
 
 /* BACK */
@@ -86,17 +105,21 @@ color:#9ca3af;
 .episodes{
 display:grid;
 grid-template-columns:repeat(5,1fr);
-gap:6px;
-margin-top:10px;
+gap:8px;
+margin-top:12px;
 }
 
 .ep{
 background:#1f2937;
-padding:10px;
-border-radius:10px;
+padding:12px;
+border-radius:12px;
 text-align:center;
 cursor:pointer;
 transition:0.2s;
+}
+
+.ep.active{
+background:#7c3aed;
 }
 
 .ep:hover{
@@ -112,7 +135,7 @@ background:#7c3aed;
 <!-- HOME -->
 <div id="home">
 
-<div style="padding:10px">
+<div style="padding:12px">
 <input class="search" placeholder="Search anime..." oninput="searchAnime(this.value)">
 </div>
 
@@ -125,7 +148,10 @@ background:#7c3aed;
 
 <div class="back" onclick="goHome()">← Back</div>
 
+<div class="player-box">
+<div class="loader" id="loader">Loading...</div>
 <iframe id="player"></iframe>
+</div>
 
 <div class="episodes" id="episodes"></div>
 
@@ -137,30 +163,20 @@ const API = "https://kogemi-api-3.onrender.com";
 
 /* SEARCH */
 async function searchAnime(q){
-
 if(!q){
-document.getElementById("results").innerHTML="";
+results.innerHTML="";
 return;
 }
-
-try{
 let res = await fetch(`${API}/search?q=${q}`);
 let data = await res.json();
 showResults(data);
-}catch(e){
-console.log(e);
 }
 
-}
-
-/* SHOW RESULTS */
+/* SHOW */
 function showResults(list){
-
-let container = document.getElementById("results");
-container.innerHTML="";
+results.innerHTML="";
 
 list.forEach(anime=>{
-
 let card = document.createElement("div");
 card.className="card";
 
@@ -170,91 +186,83 @@ card.innerHTML = `
 `;
 
 card.onclick = ()=>openAnime(anime.title.romaji);
-
-container.appendChild(card);
-
+results.appendChild(card);
 });
-
 }
 
-/* OPEN ANIME */
+/* OPEN */
 async function openAnime(title){
-
-try{
 
 let res = await fetch(`${API}/imdb?title=${title}`);
 let data = await res.json();
 
 if(!data.imdb){
-alert("No stream found");
+alert("No stream");
 return;
 }
 
-document.getElementById("home").style.display="none";
-document.getElementById("watch").style.display="block";
+home.style.display="none";
+watch.style.display="block";
 
-/* FIRST EPISODE */
+/* smart episode count */
+let total = 24;
+if(title.toLowerCase().includes("one piece")) total = 1100;
+if(title.toLowerCase().includes("naruto")) total = 500;
+
+loadEpisodes(data.imdb, total);
 playEpisode(data.imdb, 1);
-loadEpisodes(data.imdb, 50);
-
-}catch(e){
-alert("Error loading anime");
-}
 
 }
 
-/* PLAY (FIXED PLAYER) */
+/* PLAY */
 async function playEpisode(imdb, ep){
 
-const player = document.getElementById("player");
+loader.style.display="flex";
+player.src="";
 
-/* clear player first */
-player.src = "";
-
-try{
+/* highlight */
+document.querySelectorAll(".ep").forEach(e=>e.classList.remove("active"));
+if(document.querySelectorAll(".ep")[ep-1]){
+document.querySelectorAll(".ep")[ep-1].classList.add("active");
+}
 
 let res = await fetch(`${API}/stream?imdb=${imdb}&ep=${ep}`);
 let data = await res.json();
 
 if(!data.url){
-alert("Stream not available");
+loader.innerText="No stream 😢";
 return;
 }
 
-/* load video */
 player.src = data.url;
 
-}catch(e){
-alert("Error loading video");
-}
+/* hide loader */
+setTimeout(()=>loader.style.display="none",1000);
 
 }
 
-/* LOAD EPISODES */
-function loadEpisodes(imdb, total){
+/* EPISODES */
+function loadEpisodes(imdb,total){
 
-let container = document.getElementById("episodes");
-container.innerHTML="";
+episodes.innerHTML="";
 
 for(let i=1;i<=total;i++){
+let el = document.createElement("div");
+el.className="ep";
+el.innerText=i;
 
-let ep = document.createElement("div");
-ep.className="ep";
-ep.innerText=i;
+el.onclick=()=>playEpisode(imdb,i);
 
-ep.onclick=()=>playEpisode(imdb, i);
-
-container.appendChild(ep);
-
+episodes.appendChild(el);
 }
 
 }
 
 /* BACK */
 function goHome(){
-document.getElementById("watch").style.display="none";
-document.getElementById("home").style.display="block";
-document.getElementById("player").src="";
+watch.style.display="none";
+home.style.display="block";
+player.src="";
 }
 
 </script>
