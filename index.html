@@ -3,469 +3,472 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kogemi - One Piece</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
+    <title>Anime Stream - Frieren</title>
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --primary-color: #8b5cf6;
-            --primary-hover: #7c3aed;
+            --bg-color: #0b111a;
+            --primary-purple: #8b5cf6;
+            --primary-purple-hover: #7c3aed;
             --text-main: #ffffff;
             --text-muted: #9ca3af;
-            --surface: rgba(255, 255, 255, 0.05);
-            --surface-border: rgba(255, 255, 255, 0.1);
+            --card-bg: #1f2937;
+            --overlay: linear-gradient(to top, #0b111a 0%, #0b111a 10%, rgba(11, 17, 26, 0.8) 35%, transparent 100%);
         }
 
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             overflow-x: hidden;
+        }
+
+        /* Hide Scrollbar but keep functionality */
+        ::-webkit-scrollbar {
+            display: none;
         }
 
         /* --- HEADER --- */
         .header {
             position: absolute;
             top: 0;
+            left: 0;
             width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 20px;
+            padding: 20px;
             z-index: 100;
-            background: linear-gradient(to bottom, rgba(11,15,25,0.8), transparent);
         }
 
-        .header-left, .header-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .logo {
-            background: var(--primary-color);
+        .logo-circle {
             width: 35px;
             height: 35px;
+            background: var(--primary-purple);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
-            font-weight: 800;
+            font-weight: bold;
             font-size: 18px;
         }
 
-        .icon-btn {
-            background: transparent;
-            border: none;
-            color: white;
+        .nav-icons {
+            display: flex;
+            gap: 20px;
             font-size: 20px;
+            color: var(--text-muted);
+            align-items: center;
+        }
+
+        .nav-icons span {
             cursor: pointer;
         }
 
-        .profile-btn {
+        .profile-icon {
+            width: 30px;
+            height: 30px;
             background: rgba(139, 92, 246, 0.2);
-            color: var(--primary-color);
-            width: 35px;
-            height: 35px;
-            border-radius: 10px;
+            color: var(--primary-purple);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 14px;
         }
 
         /* --- HERO SECTION --- */
         .hero {
             position: relative;
-            height: 80vh;
-            min-height: 500px;
-            background: url('https://wallpaperaccess.com/full/1119442.jpg') center/cover no-repeat;
+            height: 60vh;
+            min-height: 450px;
+            background: url('https://image.tmdb.org/t/p/original/dqA0Hih1pQ7P2s2wF1E8S9pBnm1.jpg') center/cover no-repeat;
             display: flex;
-            align-items: flex-end;
-            padding-bottom: 20px;
+            flex-direction: column;
+            justify-content: flex-end;
         }
 
         .hero-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
+            bottom: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to top, var(--bg-color) 0%, rgba(11,15,25,0.8) 30%, transparent 100%);
+            background: var(--overlay);
+            z-index: 1;
         }
 
         .hero-content {
             position: relative;
-            z-index: 10;
-            width: 100%;
-            padding: 0 20px;
+            z-index: 2;
+            padding: 20px;
+            padding-bottom: 30px;
         }
 
-        /* Carousel Navigation Arrows Mockup */
-        .hero-nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: absolute;
-            width: calc(100% - 40px);
-            top: 30%;
-            pointer-events: none;
-        }
-
-        .nav-arrow {
-            background: rgba(0,0,0,0.5);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: auto;
-            cursor: pointer;
-        }
-
-        /* Meta Data */
-        .meta {
+        .metadata-row {
             display: flex;
             align-items: center;
             gap: 15px;
-            font-size: 13px;
             color: var(--text-muted);
+            font-size: 13px;
             margin-bottom: 10px;
-            font-weight: 600;
         }
 
-        .rating {
-            color: white;
+        .nav-arrow {
+            background: rgba(255, 255, 255, 0.1);
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            color: white;
+            font-size: 12px;
         }
 
-        /* Title */
-        .title {
-            font-size: 36px;
+        .hero-title {
+            font-size: 32px;
             font-weight: 800;
+            margin: 0 0 15px 0;
             line-height: 1.1;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
         }
 
-        /* Genres */
         .genres {
             display: flex;
             gap: 10px;
             margin-bottom: 15px;
         }
 
-        .genre {
-            border: 1px solid rgba(139, 92, 246, 0.5);
+        .genre-tag {
+            border: 1px solid rgba(139, 92, 246, 0.4);
             color: #c4b5fd;
-            padding: 5px 15px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 12px;
-            font-weight: 600;
-            background: rgba(139, 92, 246, 0.05);
         }
 
         .description {
-            font-size: 14px;
             color: var(--text-muted);
-            margin-bottom: 25px;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.4;
         }
 
-        /* Buttons */
+        /* --- BUTTONS --- */
         .action-buttons {
             display: flex;
-            gap: 15px;
-            align-items: center;
+            gap: 10px;
         }
 
         .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 14px 20px;
-            border: none;
+        }
+
+        .btn-watch {
+            background: var(--primary-purple);
+            color: white;
+            flex: 2;
+        }
+
+        .btn-list {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            flex: 1.5;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-info {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            width: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s ease;
-        }
-
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-            flex: 1; /* Takes up remaining space */
-        }
-
-        .btn-primary:active {
-            background: var(--primary-hover);
-        }
-
-        .btn-secondary {
-            background: var(--surface);
-            color: white;
-            border: 1px solid var(--surface-border);
-            padding: 14px 25px;
-        }
-
-        .btn-icon {
-            background: transparent;
-            color: white;
-            border: 1px solid var(--surface-border);
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            padding: 0;
             font-size: 18px;
+            flex-shrink: 0;
         }
 
-        /* --- PLAYER & EPISODES --- */
-        .content-section {
-            padding: 20px;
+        /* --- TRENDING SECTION --- */
+        .trending-section {
+            padding: 0 20px 20px 20px;
         }
 
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .carousel-indicators {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: #4b5563;
+            border-radius: 50%;
+        }
+        .dot.active {
+            width: 20px;
+            background: var(--primary-purple);
+            border-radius: 4px;
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            scroll-snap-type: x mandatory;
+        }
+
+        .card {
+            min-width: 140px;
+            width: 140px;
+            scroll-snap-align: start;
+            cursor: pointer;
+        }
+
+        .card-img-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 2 / 3;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .card-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .rating-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            padding: 3px 6px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin: 0 0 4px 0;
+        }
+
+        .card-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* --- PLAYER & EPISODES (Hidden by default) --- */
         .player-container {
             display: none;
-            margin-bottom: 20px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            padding: 20px;
+            background: var(--bg-color);
+            border-top: 1px solid #1f2937;
         }
 
         iframe {
             width: 100%;
-            aspect-ratio: 16 / 9;
-            height: auto;
-            border-radius: 16px;
-            border: 1px solid var(--surface-border);
-            background: black;
+            height: 250px;
+            border-radius: 12px;
+            border: none;
+            margin-bottom: 15px;
+            background: #000;
         }
 
-        /* ARCS */
-        .arcs {
-            display: flex;
-            overflow-x: auto;
-            gap: 12px;
-            padding-bottom: 15px;
-            scrollbar-width: none; /* Firefox */
-        }
-        
-        .arcs::-webkit-scrollbar {
-            display: none; /* Chrome */
-        }
-
-        .arc {
-            background: var(--surface);
-            border: 1px solid var(--surface-border);
-            padding: 10px 20px;
-            border-radius: 20px;
-            white-space: nowrap;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .arc.active {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        /* EPISODES */
-        .episodes {
+        .episodes-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
             gap: 10px;
-            margin-top: 10px;
-            max-height: 250px;
-            overflow-y: auto;
-            padding-right: 5px;
+            margin-top: 15px;
         }
 
-        .episodes::-webkit-scrollbar { width: 5px; }
-        .episodes::-webkit-scrollbar-thumb { background: var(--surface-border); border-radius: 5px; }
-
-        .ep {
-            background: var(--surface);
-            border: 1px solid transparent;
-            padding: 12px 0;
+        .ep-btn {
+            background: var(--card-bg);
+            color: white;
+            border: none;
+            padding: 12px;
             border-radius: 10px;
-            text-align: center;
-            font-weight: 600;
             cursor: pointer;
+            font-weight: bold;
             transition: 0.2s;
         }
 
-        .ep:hover, .ep.playing {
-            background: rgba(139, 92, 246, 0.2);
-            color: var(--primary-color);
-            border-color: var(--primary-color);
+        .ep-btn:hover, .ep-btn.active {
+            background: var(--primary-purple);
         }
-
     </style>
 </head>
 <body>
 
     <header class="header">
-        <div class="header-left">
-            <div class="logo">O</div>
-            <div class="icon-btn" style="font-size: 18px; font-weight: 600; display:none;">Kogemi</div> 
-        </div>
-        <div class="header-right">
-            <button class="icon-btn">🔍</button>
-            <div class="profile-btn">👤</div>
-            <button class="icon-btn">☰</button>
+        <div class="logo-circle">o</div>
+        <div class="nav-icons">
+            <span>🔍</span>
+            <div class="profile-icon">👤</div>
+            <span>☰</span>
         </div>
     </header>
 
     <section class="hero">
         <div class="hero-overlay"></div>
-        
         <div class="hero-content">
-            <div class="hero-nav">
+            <div class="metadata-row">
                 <div class="nav-arrow">❮</div>
+                <span>⭐ 8.9</span>
+                <span>2026</span>
+                <span>10 eps</span>
+                <span>24 min</span>
                 <div class="nav-arrow">❯</div>
             </div>
-
-            <div class="meta">
-                <div class="rating">⭐ 8.8</div>
-                <span>1999</span>
-                <span>1155 eps</span>
-                <span>24 min</span>
-            </div>
-
-            <h1 class="title">ONE PIECE</h1>
-
+            
+            <h1 class="hero-title">Frieren: Beyond Journey's End Season 2</h1>
+            
             <div class="genres">
-                <span class="genre">Action</span>
-                <span class="genre">Adventure</span>
-                <span class="genre">Fantasy</span>
+                <span class="genre-tag">Adventure</span>
+                <span class="genre-tag">Drama</span>
+                <span class="genre-tag">Fantasy</span>
             </div>
 
-            <p class="description">Follow the adventures of Monkey D. Luffy and his pirate crew in order to find the greatest treasure ever left by the legendary Pirate, Gold Roger.</p>
+            <p class="description">The second season of Sousou no Frieren.</p>
 
             <div class="action-buttons">
-                <button class="btn btn-primary" onclick="showPlayer()">
-                    <span>▶</span> Watch Now
-                </button>
-                <button class="btn btn-secondary">
-                    <span>+</span> My List
-                </button>
-                <button class="btn btn-icon">
-                    ℹ
-                </button>
+                <button class="btn btn-watch" onclick="showPlayer()">▶ Watch Now</button>
+                <button class="btn btn-list">➕ My List</button>
+                <button class="btn btn-info">ℹ</button>
             </div>
         </div>
     </section>
 
-    <section class="content-section" id="streaming-area">
-        <div class="player-container" id="playerBox">
-            <iframe id="player" src="" allowfullscreen></iframe>
+    <section class="player-container" id="playerBox">
+        <h3 style="margin-top:0;">Now Playing</h3>
+        <iframe id="player" src=""></iframe>
+        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px;">Select Episode:</div>
+        <div class="episodes-grid" id="episodes"></div>
+    </section>
+
+    <section class="trending-section">
+        <div class="section-header">
+            <h2 class="section-title">🔥 Trending Now</h2>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <div class="carousel-indicators">
+                    <div class="dot active"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <div style="color: var(--text-muted); font-size: 12px; letter-spacing: 5px;">❮ ❯</div>
+            </div>
         </div>
 
-        <div class="arcs" id="arcList"></div>
+        <div class="cards-container">
+            <div class="card">
+                <div class="card-img-wrapper">
+                    <div class="rating-badge">⭐ 7.0</div>
+                    <img src="https://image.tmdb.org/t/p/w500/bLwEunBfL9tN2F4Mpd58G9q9uOT.jpg" alt="Tune In">
+                </div>
+                <h3 class="card-title">Tune In to the Midnight...</h3>
+                <div class="card-meta">Comedy • Romance • 2026</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-img-wrapper">
+                    <div class="rating-badge">⭐ 8.9</div>
+                    <img src="https://image.tmdb.org/t/p/w500/dqA0Hih1pQ7P2s2wF1E8S9pBnm1.jpg" alt="Frieren">
+                </div>
+                <h3 class="card-title">Frieren: Beyond...</h3>
+                <div class="card-meta">Adventure • Drama • 2026</div>
+            </div>
 
-        <div class="episodes" id="episodes"></div>
+            <div class="card">
+                <div class="card-img-wrapper">
+                    <div class="rating-badge">⭐ 8.8</div>
+                    <img src="https://image.tmdb.org/t/p/w500/fcBdrsA7v9kO7x94z61gI26458.jpg" alt="One Piece">
+                </div>
+                <h3 class="card-title">ONE PIECE</h3>
+                <div class="card-meta">Action • Adventure</div>
+            </div>
+        </div>
     </section>
 
     <script>
-        /* SHOW PLAYER AND SCROLL TO IT */
-        function showPlayer(){
-            const playerBox = document.getElementById("playerBox");
-            playerBox.style.display = "block";
+        // --- Video Player Logic --- //
+        const totalEpisodes = 10; 
+
+        function showPlayer() {
+            document.getElementById("playerBox").style.display = "block";
+            // Scroll down smoothly to the player
+            document.getElementById("playerBox").scrollIntoView({ behavior: 'smooth' });
             
-            // Auto scroll down to the player smoothly
-            document.getElementById("streaming-area").scrollIntoView({ behavior: 'smooth' });
-            
-            // Play episode 1 if iframe is empty
-            if(!document.getElementById("player").src) {
-                playEpisode(1, null);
-            }
+            loadEpisodes();
+            playEpisode(1);
         }
 
-        /* PLAY EPISODE */
-        function playEpisode(num, event){
-            document.getElementById("player").src = `https://vidfast.pro/tv/tt0388629/1/${num}?autoPlay=true`;
+        function playEpisode(num) {
+            // Replaced with a generic placeholder link since the previous specific ID was for One Piece
+            // You can replace the src URL with your actual streaming endpoint
+            document.getElementById("player").src = `https://vidfast.pro/tv/tt31447294/2/${num}?autoPlay=true`;
             
-            // Highlight active episode
-            document.querySelectorAll(".ep").forEach(e => e.classList.remove("playing"));
-            if(event) {
-                event.target.classList.add("playing");
-            } else {
-                // If called without event (like on Watch Now), highlight first ep
-                const firstEp = document.querySelector(".ep");
-                if(firstEp) firstEp.classList.add("playing");
-            }
+            // Highlight active button
+            document.querySelectorAll('.ep-btn').forEach(btn => btn.classList.remove('active'));
+            let activeBtn = document.getElementById('ep-btn-' + num);
+            if(activeBtn) activeBtn.classList.add('active');
         }
 
-        /* ARCS DATA */
-        const arcs = [
-            {name:"East Blue", start:1, end:61},
-            {name:"Alabasta", start:62, end:135},
-            {name:"Skypiea", start:136, end:206},
-            {name:"Water 7", start:207, end:325},
-            {name:"Marineford", start:326, end:516},
-            {name:"Dressrosa", start:517, end:746},
-            {name:"Wano", start:747, end:1155}
-        ];
+        function loadEpisodes() {
+            let container = document.getElementById("episodes");
+            container.innerHTML = ""; // Clear existing
 
-        /* LOAD ARCS */
-        const arcContainer = document.getElementById("arcList");
-
-        arcs.forEach((arc, index)=>{
-            let btn = document.createElement("div");
-            btn.className = "arc";
-            btn.innerText = arc.name;
-
-            btn.onclick = ()=>{
-                document.querySelectorAll(".arc").forEach(a=>a.classList.remove("active"));
-                btn.classList.add("active");
-                loadEpisodes(arc.start, arc.end);
-            };
-
-            // Select first arc by default
-            if(index === 0){
-                btn.classList.add("active");
-                loadEpisodes(arc.start, arc.end);
-            }
-
-            arcContainer.appendChild(btn);
-        });
-
-        /* LOAD EPISODES */
-        function loadEpisodes(start, end){
-            const container = document.getElementById("episodes");
-            container.innerHTML = "";
-
-            for(let i=start; i<=end; i++){
-                let ep = document.createElement("div");
-                ep.className = "ep";
-                ep.innerText = i;
-
-                ep.onclick = (e) => playEpisode(i, e);
-
-                container.appendChild(ep);
+            for (let i = 1; i <= totalEpisodes; i++) {
+                let btn = document.createElement("button");
+                btn.className = "ep-btn";
+                btn.id = "ep-btn-" + i;
+                btn.innerText = "Ep " + i;
+                btn.onclick = () => playEpisode(i);
+                container.appendChild(btn);
             }
         }
     </script>
+
 </body>
 </html>
