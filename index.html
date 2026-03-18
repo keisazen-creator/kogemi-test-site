@@ -1,474 +1,318 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anime Stream - Frieren</title>
-    <style>
-        :root {
-            --bg-color: #0b111a;
-            --primary-purple: #8b5cf6;
-            --primary-purple-hover: #7c3aed;
-            --text-main: #ffffff;
-            --text-muted: #9ca3af;
-            --card-bg: #1f2937;
-            --overlay: linear-gradient(to top, #0b111a 0%, #0b111a 10%, rgba(11, 17, 26, 0.8) 35%, transparent 100%);
-        }
+<title>Kogemi</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+<style>
+:root{
+--bg:#0b1220;
+--card:#1f2937;
+--accent:#8b5cf6;
+--text:#fff;
+--muted:#9ca3af;
+}
 
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow-x: hidden;
-        }
+body{
+margin:0;
+font-family:system-ui;
+background:var(--bg);
+color:var(--text);
+}
 
-        /* Hide Scrollbar but keep functionality */
-        ::-webkit-scrollbar {
-            display: none;
-        }
+/* NAV */
+nav{
+display:flex;
+padding:12px;
+gap:10px;
+background:#111827;
+position:sticky;
+top:0;
+z-index:10;
+}
 
-        /* --- HEADER --- */
-        .header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            z-index: 100;
-        }
+.logo{
+font-weight:bold;
+font-size:18px;
+color:var(--accent);
+}
 
-        .logo-circle {
-            width: 35px;
-            height: 35px;
-            background: var(--primary-purple);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 18px;
-        }
+.search{
+flex:1;
+padding:10px;
+border:none;
+border-radius:10px;
+background:var(--card);
+color:white;
+}
 
-        .nav-icons {
-            display: flex;
-            gap: 20px;
-            font-size: 20px;
-            color: var(--text-muted);
-            align-items: center;
-        }
+/* HERO */
+.hero{
+height:60vh;
+position:relative;
+display:flex;
+align-items:flex-end;
+padding:20px;
+background-size:cover;
+background-position:center;
+}
 
-        .nav-icons span {
-            cursor: pointer;
-        }
+.overlay{
+position:absolute;
+inset:0;
+background:linear-gradient(to top,#0b1220,transparent);
+}
 
-        .profile-icon {
-            width: 30px;
-            height: 30px;
-            background: rgba(139, 92, 246, 0.2);
-            color: var(--primary-purple);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-        }
+.hero-content{
+position:relative;
+z-index:2;
+}
 
-        /* --- HERO SECTION --- */
-        .hero {
-            position: relative;
-            height: 60vh;
-            min-height: 450px;
-            background: url('https://image.tmdb.org/t/p/original/dqA0Hih1pQ7P2s2wF1E8S9pBnm1.jpg') center/cover no-repeat;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-        }
+.title{
+font-size:26px;
+font-weight:bold;
+}
 
-        .hero-overlay {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--overlay);
-            z-index: 1;
-        }
+.desc{
+font-size:14px;
+color:var(--muted);
+margin:10px 0;
+}
 
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            padding: 20px;
-            padding-bottom: 30px;
-        }
+.btn{
+background:var(--accent);
+padding:10px 20px;
+border:none;
+border-radius:10px;
+color:white;
+cursor:pointer;
+}
 
-        .metadata-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: var(--text-muted);
-            font-size: 13px;
-            margin-bottom: 10px;
-        }
+/* ROW */
+.row{
+display:flex;
+gap:10px;
+overflow-x:auto;
+padding:10px;
+}
 
-        .nav-arrow {
-            background: rgba(255, 255, 255, 0.1);
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            cursor: pointer;
-            color: white;
-            font-size: 12px;
-        }
+.card{
+min-width:140px;
+background:var(--card);
+border-radius:10px;
+overflow:hidden;
+cursor:pointer;
+}
 
-        .hero-title {
-            font-size: 32px;
-            font-weight: 800;
-            margin: 0 0 15px 0;
-            line-height: 1.1;
-        }
+.card img{
+width:100%;
+height:200px;
+object-fit:cover;
+}
 
-        .genres {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
+.card-title{
+padding:6px;
+font-size:13px;
+}
 
-        .genre-tag {
-            border: 1px solid rgba(139, 92, 246, 0.4);
-            color: #c4b5fd;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-        }
+/* PLAYER */
+.player{
+display:none;
+padding:10px;
+}
 
-        .description {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-bottom: 20px;
-            line-height: 1.4;
-        }
+iframe{
+width:100%;
+aspect-ratio:16/9;
+border:none;
+border-radius:10px;
+}
 
-        /* --- BUTTONS --- */
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
+.back{
+margin-bottom:10px;
+cursor:pointer;
+color:var(--muted);
+}
 
-        .btn {
-            border: none;
-            border-radius: 12px;
-            padding: 14px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
+/* EP */
+.episodes{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:6px;
+margin-top:10px;
+}
 
-        .btn-watch {
-            background: var(--primary-purple);
-            color: white;
-            flex: 2;
-        }
+.ep{
+background:var(--card);
+padding:10px;
+text-align:center;
+border-radius:8px;
+cursor:pointer;
+}
 
-        .btn-list {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            flex: 1.5;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-info {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            width: 50px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
-
-        /* --- TRENDING SECTION --- */
-        .trending-section {
-            padding: 0 20px 20px 20px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .section-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .carousel-indicators {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-        }
-
-        .dot {
-            width: 6px;
-            height: 6px;
-            background: #4b5563;
-            border-radius: 50%;
-        }
-        .dot.active {
-            width: 20px;
-            background: var(--primary-purple);
-            border-radius: 4px;
-        }
-
-        .cards-container {
-            display: flex;
-            gap: 15px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-            scroll-snap-type: x mandatory;
-        }
-
-        .card {
-            min-width: 140px;
-            width: 140px;
-            scroll-snap-align: start;
-            cursor: pointer;
-        }
-
-        .card-img-wrapper {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 2 / 3;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-
-        .card-img-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .rating-badge {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            padding: 3px 6px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .card-title {
-            font-size: 14px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin: 0 0 4px 0;
-        }
-
-        .card-meta {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        /* --- PLAYER & EPISODES (Hidden by default) --- */
-        .player-container {
-            display: none;
-            padding: 20px;
-            background: var(--bg-color);
-            border-top: 1px solid #1f2937;
-        }
-
-        iframe {
-            width: 100%;
-            height: 250px;
-            border-radius: 12px;
-            border: none;
-            margin-bottom: 15px;
-            background: #000;
-        }
-
-        .episodes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .ep-btn {
-            background: var(--card-bg);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-        .ep-btn:hover, .ep-btn.active {
-            background: var(--primary-purple);
-        }
-    </style>
+.ep.active{
+background:var(--accent);
+}
+</style>
 </head>
+
 <body>
 
-    <header class="header">
-        <div class="logo-circle">o</div>
-        <div class="nav-icons">
-            <span>🔍</span>
-            <div class="profile-icon">👤</div>
-            <span>☰</span>
-        </div>
-    </header>
+<nav>
+<div class="logo">Kogemi</div>
+<input class="search" id="search" placeholder="Search anime...">
+</nav>
 
-    <section class="hero">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <div class="metadata-row">
-                <div class="nav-arrow">❮</div>
-                <span>⭐ 8.9</span>
-                <span>2026</span>
-                <span>10 eps</span>
-                <span>24 min</span>
-                <div class="nav-arrow">❯</div>
-            </div>
-            
-            <h1 class="hero-title">Frieren: Beyond Journey's End Season 2</h1>
-            
-            <div class="genres">
-                <span class="genre-tag">Adventure</span>
-                <span class="genre-tag">Drama</span>
-                <span class="genre-tag">Fantasy</span>
-            </div>
+<!-- HERO -->
+<div class="hero" id="hero">
+<div class="overlay"></div>
+<div class="hero-content">
+<div class="title" id="title">Loading...</div>
+<div class="desc" id="desc"></div>
+<button class="btn" onclick="watch()">▶ Watch Now</button>
+</div>
+</div>
 
-            <p class="description">The second season of Sousou no Frieren.</p>
+<!-- TRENDING -->
+<div class="row" id="row"></div>
 
-            <div class="action-buttons">
-                <button class="btn btn-watch" onclick="showPlayer()">▶ Watch Now</button>
-                <button class="btn btn-list">➕ My List</button>
-                <button class="btn btn-info">ℹ</button>
-            </div>
-        </div>
-    </section>
+<!-- PLAYER -->
+<div class="player" id="playerBox">
+<div class="back" onclick="back()">← Back</div>
+<iframe id="player"></iframe>
+<div class="episodes" id="episodes"></div>
+</div>
 
-    <section class="player-container" id="playerBox">
-        <h3 style="margin-top:0;">Now Playing</h3>
-        <iframe id="player" src=""></iframe>
-        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px;">Select Episode:</div>
-        <div class="episodes-grid" id="episodes"></div>
-    </section>
+<script>
+const API="https://kogemi-api-3.onrender.com";
+const JIKAN="https://api.jikan.moe/v4";
 
-    <section class="trending-section">
-        <div class="section-header">
-            <h2 class="section-title">🔥 Trending Now</h2>
-            <div style="display: flex; gap: 15px; align-items: center;">
-                <div class="carousel-indicators">
-                    <div class="dot active"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                </div>
-                <div style="color: var(--text-muted); font-size: 12px; letter-spacing: 5px;">❮ ❯</div>
-            </div>
-        </div>
+let current=null;
+let imdb=null;
 
-        <div class="cards-container">
-            <div class="card">
-                <div class="card-img-wrapper">
-                    <div class="rating-badge">⭐ 7.0</div>
-                    <img src="https://image.tmdb.org/t/p/w500/bLwEunBfL9tN2F4Mpd58G9q9uOT.jpg" alt="Tune In">
-                </div>
-                <h3 class="card-title">Tune In to the Midnight...</h3>
-                <div class="card-meta">Comedy • Romance • 2026</div>
-            </div>
-            
-            <div class="card">
-                <div class="card-img-wrapper">
-                    <div class="rating-badge">⭐ 8.9</div>
-                    <img src="https://image.tmdb.org/t/p/w500/dqA0Hih1pQ7P2s2wF1E8S9pBnm1.jpg" alt="Frieren">
-                </div>
-                <h3 class="card-title">Frieren: Beyond...</h3>
-                <div class="card-meta">Adventure • Drama • 2026</div>
-            </div>
+/* SEARCH */
+document.getElementById("search").oninput=async(e)=>{
+let q=e.target.value;
+if(q.length<3)return;
 
-            <div class="card">
-                <div class="card-img-wrapper">
-                    <div class="rating-badge">⭐ 8.8</div>
-                    <img src="https://image.tmdb.org/t/p/w500/fcBdrsA7v9kO7x94z61gI26458.jpg" alt="One Piece">
-                </div>
-                <h3 class="card-title">ONE PIECE</h3>
-                <div class="card-meta">Action • Adventure</div>
-            </div>
-        </div>
-    </section>
+let res=await fetch(`${JIKAN}/anime?q=${q}`);
+let data=await res.json();
 
-    <script>
-        // --- Video Player Logic --- //
-        const totalEpisodes = 10; 
+if(data.data && data.data[0]){
+loadAnime(data.data[0]);
+}
+};
 
-        function showPlayer() {
-            document.getElementById("playerBox").style.display = "block";
-            // Scroll down smoothly to the player
-            document.getElementById("playerBox").scrollIntoView({ behavior: 'smooth' });
-            
-            loadEpisodes();
-            playEpisode(1);
-        }
+/* LOAD TRENDING */
+async function loadTrending(){
+let res=await fetch(`${JIKAN}/top/anime`);
+let data=await res.json();
 
-        function playEpisode(num) {
-            // Replaced with a generic placeholder link since the previous specific ID was for One Piece
-            // You can replace the src URL with your actual streaming endpoint
-            document.getElementById("player").src = `https://vidfast.pro/tv/tt31447294/2/${num}?autoPlay=true`;
-            
-            // Highlight active button
-            document.querySelectorAll('.ep-btn').forEach(btn => btn.classList.remove('active'));
-            let activeBtn = document.getElementById('ep-btn-' + num);
-            if(activeBtn) activeBtn.classList.add('active');
-        }
+let list=data.data.slice(0,10);
 
-        function loadEpisodes() {
-            let container = document.getElementById("episodes");
-            container.innerHTML = ""; // Clear existing
+document.getElementById("row").innerHTML="";
 
-            for (let i = 1; i <= totalEpisodes; i++) {
-                let btn = document.createElement("button");
-                btn.className = "ep-btn";
-                btn.id = "ep-btn-" + i;
-                btn.innerText = "Ep " + i;
-                btn.onclick = () => playEpisode(i);
-                container.appendChild(btn);
-            }
-        }
-    </script>
+list.forEach(a=>{
+let card=document.createElement("div");
+card.className="card";
+
+card.innerHTML=`
+<img src="${a.images.jpg.image_url}">
+<div class="card-title">${a.title}</div>
+`;
+
+card.onclick=()=>loadAnime(a);
+
+document.getElementById("row").appendChild(card);
+});
+
+loadAnime(list[0]);
+}
+
+/* LOAD HERO */
+function loadAnime(a){
+current=a;
+
+document.getElementById("hero").style.backgroundImage=
+`url(${a.images.jpg.large_image_url})`;
+
+document.getElementById("title").innerText=a.title;
+document.getElementById("desc").innerText=a.synopsis || "";
+
+/* reset */
+imdb=null;
+}
+
+/* CLEAN TITLE */
+function clean(t){
+return t.split(":")[0].split("-")[0].trim();
+}
+
+/* WATCH */
+async function watch(){
+
+let title=clean(current.title);
+
+let res=await fetch(`${API}/imdb?title=${title}`);
+let data=await res.json();
+
+if(!data.imdb){
+alert("No stream");
+return;
+}
+
+imdb=data.imdb;
+
+document.getElementById("playerBox").style.display="block";
+
+loadEpisodes(50);
+play(1);
+}
+
+/* PLAY */
+async function play(ep){
+
+let iframe=document.getElementById("player");
+
+/* try API */
+let res=await fetch(`${API}/stream?imdb=${imdb}&ep=${ep}`);
+let data=await res.json();
+
+if(data.url){
+iframe.src=data.url;
+}else{
+/* fallback */
+iframe.src=`https://vidsrc.xyz/embed/tv/${imdb}/1/${ep}`;
+}
+
+/* active */
+document.querySelectorAll(".ep").forEach(e=>e.classList.remove("active"));
+document.querySelectorAll(".ep")[ep-1]?.classList.add("active");
+}
+
+/* EPISODES */
+function loadEpisodes(n){
+let box=document.getElementById("episodes");
+box.innerHTML="";
+
+for(let i=1;i<=n;i++){
+let el=document.createElement("div");
+el.className="ep";
+el.innerText=i;
+el.onclick=()=>play(i);
+box.appendChild(el);
+}
+}
+
+/* BACK */
+function back(){
+document.getElementById("playerBox").style.display="none";
+document.getElementById("player").src="";
+}
+
+/* INIT */
+loadTrending();
+</script>
 
 </body>
 </html>
