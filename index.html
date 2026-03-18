@@ -14,103 +14,81 @@ body {
 }
 
 /* NAV */
-header {
+nav {
   padding:15px;
   display:flex;
-  gap:10px;
-  position:sticky;
-  top:0;
-  background:#0b1220;
-  z-index:10;
+  justify-content:space-between;
+  align-items:center;
 }
-
-input {
-  flex:1;
-  padding:12px;
+.logo {
+  font-weight:bold;
+  font-size:20px;
+}
+.search {
+  padding:10px;
   border-radius:10px;
   border:none;
 }
 
-button {
-  padding:10px 15px;
-  background:#8b5cf6;
-  border:none;
-  color:white;
-  border-radius:10px;
-  cursor:pointer;
+/* HERO */
+.hero {
+  height:300px;
+  position:relative;
+  display:flex;
+  align-items:flex-end;
+  padding:20px;
+}
+.hero-bg {
+  position:absolute;
+  inset:0;
+  background-size:cover;
+  opacity:.4;
+}
+.hero h1 {
+  z-index:2;
 }
 
-/* SECTION */
+/* ROWS */
 .section {
   padding:10px;
 }
-.section h2 {
-  margin-bottom:10px;
-}
-
-/* GRID */
-.grid {
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
+.row {
+  display:flex;
   gap:10px;
+  overflow-x:auto;
 }
-
 .card {
-  background:#111827;
-  padding:10px;
-  border-radius:10px;
+  min-width:140px;
   cursor:pointer;
-  transition:.2s;
 }
-.card:hover { transform:scale(1.05); }
-
 .card img {
   width:100%;
   border-radius:10px;
 }
 
 /* PLAYER */
-#playerBox {
+#player {
   position:fixed;
   inset:0;
-  background:#000;
+  background:black;
   display:none;
   flex-direction:column;
-  z-index:100;
 }
-
 iframe {
   width:100%;
   height:50%;
-  border:none;
 }
-
-.player-top {
-  display:flex;
-  justify-content:space-between;
-  padding:10px;
-}
-
-.controls {
-  display:flex;
-  gap:10px;
-  padding:10px;
-}
-
 #episodes {
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(60px,1fr));
   gap:8px;
   padding:10px;
-  overflow:auto;
-  height:50%;
 }
-
 .ep {
   background:#1f2937;
   padding:10px;
   text-align:center;
-  border-radius:8px;
+  border-radius:6px;
   cursor:pointer;
 }
 .ep.active {
@@ -121,152 +99,160 @@ iframe {
 
 <body>
 
-<header>
-  <input id="searchInput" placeholder="Search anime...">
-  <button onclick="search()">Search</button>
-</header>
+<nav>
+  <div class="logo">Kogemi</div>
+  <input class="search" placeholder="Search..." oninput="search(this.value)">
+</nav>
 
-<!-- HOME -->
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <h1 id="heroTitle">Loading...</h1>
+</div>
+
+<!-- ROWS -->
 <div class="section">
   <h2>🔥 Trending</h2>
-  <div class="grid" id="trending"></div>
+  <div class="row" id="trending"></div>
 </div>
 
 <div class="section">
   <h2>⭐ Popular</h2>
-  <div class="grid" id="popular"></div>
+  <div class="row" id="popular"></div>
 </div>
 
 <!-- PLAYER -->
-<div id="playerBox">
-
-  <div class="player-top">
-    <button onclick="closePlayer()">✕</button>
-    <div>Episode <span id="epNum">1</span></div>
-  </div>
-
+<div id="player">
+  <button onclick="closePlayer()">❌ Close</button>
   <iframe id="iframe"></iframe>
-
-  <div class="controls">
-    <button onclick="prevEp()">⏮ Prev</button>
-    <button onclick="nextEp()">⏭ Next</button>
-  </div>
-
   <div id="episodes"></div>
-
 </div>
 
 <script>
 const API = "https://kogemi-api-3.onrender.com";
 
-let currentImdb = null;
+let imdb = null;
 let currentEp = 1;
 let totalEps = 50;
 
-/* 🔥 LOAD HOME */
-window.onload = () => {
-  loadSection("naruto", "trending");
-  loadSection("one piece", "popular");
+/* LOAD HOME */
+window.onload = async () => {
+  loadSection("naruto","trending");
+  loadSection("one piece","popular");
 };
 
-/* LOAD SECTIONS */
-async function loadSection(q, id) {
+/* LOAD ROW */
+async function loadSection(q,id){
   const res = await fetch(`${API}/search?q=${q}`);
   const data = await res.json();
 
   const container = document.getElementById(id);
   container.innerHTML = "";
 
-  data.forEach(anime => {
-    const title = anime.title.english || anime.title.romaji;
+  data.forEach((anime,i)=>{
+    const title = anime.title.romaji;
+
+    if(i===0){
+      document.getElementById("heroBg").style.backgroundImage =
+        `url(${anime.coverImage.large})`;
+      document.getElementById("heroTitle").innerText = title;
+    }
 
     const div = document.createElement("div");
-    div.className = "card";
+    div.className="card";
 
     div.innerHTML = `
       <img src="${anime.coverImage.large}">
-      <p>${title}</p>
     `;
 
-    div.onclick = () => selectAnime(title);
+    div.onclick = ()=>openAnime(title);
 
     container.appendChild(div);
   });
 }
 
-/* 🔍 SEARCH */
-async function search() {
-  const q = document.getElementById("searchInput").value;
-  if (!q) return;
+/* SEARCH */
+async function search(q){
+  if(!q) return;
 
-  loadSection(q, "trending");
-}
-
-/* SELECT */
-async function selectAnime(title) {
-  const clean = title.split(":")[0];
-
-  const res = await fetch(`${API}/imdb?title=${encodeURIComponent(clean)}`);
+  const res = await fetch(`${API}/search?q=${q}`);
   const data = await res.json();
 
-  if (!data.imdb) {
+  const container = document.getElementById("trending");
+  container.innerHTML = "";
+
+  data.forEach(anime=>{
+    const title = anime.title.romaji;
+
+    const div = document.createElement("div");
+    div.className="card";
+    div.innerHTML=`<img src="${anime.coverImage.large}">`;
+
+    div.onclick = ()=>openAnime(title);
+
+    container.appendChild(div);
+  });
+}
+
+/* OPEN */
+async function openAnime(title){
+  const res = await fetch(`${API}/imdb?title=${encodeURIComponent(title)}`);
+  const data = await res.json();
+
+  if(!data.imdb){
     alert("No stream");
     return;
   }
 
-  currentImdb = data.imdb;
+  imdb = data.imdb;
 
-  if (clean.toLowerCase().includes("one piece")) totalEps = 1100;
-  else if (clean.toLowerCase().includes("naruto")) totalEps = 220;
-  else totalEps = 50;
+  if(title.toLowerCase().includes("one piece")) totalEps=1100;
+  else totalEps=50;
 
   buildEpisodes();
-  playEpisode(1);
+  play(1);
 
-  document.getElementById("playerBox").style.display = "flex";
+  document.getElementById("player").style.display="flex";
 }
 
 /* PLAY */
-async function playEpisode(ep) {
+async function play(ep){
   currentEp = ep;
-  document.getElementById("epNum").innerText = ep;
 
-  const res = await fetch(`${API}/stream?imdb=${currentImdb}&ep=${ep}`);
+  const res = await fetch(`${API}/stream?imdb=${imdb}&ep=${ep}`);
   const data = await res.json();
 
   document.getElementById("iframe").src =
     data.url || data.backup;
 
-  highlightEp();
-}
-
-/* CONTROLS */
-function nextEp(){ if(currentEp<totalEps) playEpisode(currentEp+1); }
-function prevEp(){ if(currentEp>1) playEpisode(currentEp-1); }
-function closePlayer(){
-  document.getElementById("playerBox").style.display="none";
-  document.getElementById("iframe").src="";
+  highlight();
 }
 
 /* EPISODES */
-function buildEpisodes() {
+function buildEpisodes(){
   const container = document.getElementById("episodes");
-  container.innerHTML = "";
+  container.innerHTML="";
 
-  for (let i = 1; i <= totalEps; i++) {
-    const btn = document.createElement("div");
-    btn.className = "ep";
-    btn.innerText = i;
-    btn.onclick = () => playEpisode(i);
+  for(let i=1;i<=totalEps;i++){
+    const btn=document.createElement("div");
+    btn.className="ep";
+    btn.innerText=i;
+    btn.onclick=()=>play(i);
     container.appendChild(btn);
   }
 }
 
 /* ACTIVE */
-function highlightEp() {
-  document.querySelectorAll(".ep").forEach(e => e.classList.remove("active"));
-  const el = document.querySelectorAll(".ep")[currentEp - 1];
-  if (el) el.classList.add("active");
+function highlight(){
+  document.querySelectorAll(".ep").forEach(e=>e.classList.remove("active"));
+  const el=document.querySelectorAll(".ep")[currentEp-1];
+  if(el) el.classList.add("active");
+}
+
+/* CLOSE */
+function closePlayer(){
+  document.getElementById("player").style.display="none";
+  document.getElementById("iframe").src="";
 }
 </script>
 
