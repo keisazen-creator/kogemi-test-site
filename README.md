@@ -102,11 +102,6 @@ This project evolved into:
 kogemi-test-site/
 │
 ├── index.html
-├── script.js
-├── style.css
-├── luffy.jpg
-├── onepiece.webm
-├── Otakucloud_v1.0.apk
 └── README.md
 ```
 
